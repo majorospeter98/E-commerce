@@ -1,5 +1,5 @@
 <template>
-  
+  {{ page }}
 
     <Form @submit.prevent="submitForm" action="/register" method="post" class="h-400 border-2 border-b-blue-700">
     <input class="border border-amber-800 rounded-lg" type="text" name="name" v-model="form.name" />
@@ -13,7 +13,10 @@
 <script setup>
 import { Form, router } from "@inertiajs/vue3";
 import { ref } from "vue";
-
+import {Head} from '@inertiajs/vue3';
+import { Link } from '@inertiajs/vue3';
+import { usePage } from '@inertiajs/vue3'
+const page = usePage()
 defineProps({errors:Object})
 let form =ref({
     'name' : '',

@@ -1,9 +1,8 @@
 
 
 <script setup>
-import { Link,router } from '@inertiajs/vue3'
-import Layout from '../Shared/Layout.vue'
-import { Head } from '@inertiajs/vue3'
+import { Head, router } from '@inertiajs/vue3';
+import {Link} from '@inertiajs/vue3';
 
 defineProps({items:Array})
 
@@ -11,19 +10,19 @@ defineProps({items:Array})
 
 
 <template>
-  <Layout>
 <Head>
     <title>Index page</title>
-    <meta name="description" content="Your page description">
+    <meta name="description" content="Index page showing all items">
 </Head>
-  <ul class="mt-6">
-    <li v-for="item in items" :key="item.id">{{ item }}
+<section>
+  <ul class="mt-6 flex flex-wrap text-center">
+    <li v-for="item in items" :key="item.id">
    <img class="hover:cursor-pointer" @click="router.get('/items/' + item.id)" :src="`/Teams/${item.team}/${item.image}`">
-   <p>{{ item.type }} {{ item.brand }}</p>
+   <p class="mt-4">{{ item.type }} {{ item.brand }}</p>
     <Link :href="'/items/' + item.id">Részletek</Link>
     </li>
   </ul>
-</Layout>
+</section>
 </template>
 <style>
 

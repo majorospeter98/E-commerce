@@ -4,12 +4,17 @@ import { Link } from "@inertiajs/vue3"
 </script>
 
 <template>
-    <main>
-        <header>
+         <header>
             <Link href="/">Home</Link>
-            <Link href="/about">About</Link>
-            <Link href="/contact">Contact</Link>
+            <Link href="/login">Login</Link>
+            <Link href="/register">Register</Link>
+            
+            <Link method="POST" href="/logout">Logout</Link>
+            <Link href="/favourites">Favourites</Link>
+                   
         </header>
+    <main class="mt-6">
+   
      
             <slot />
         

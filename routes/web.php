@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Favourite;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Models\Item;
@@ -34,12 +35,46 @@ Route::post('/login', function () {
         'password' => ['required', 'min:8']
     ]);
     if (Auth::attempt($validated)) {
-        dd("Van ilyen");
+        
     }
-});
+    redirect("/");
+}) ->name('login');
+
+//fav
+Route::get('/favourites', function () {
+$fav=Favourite::get();
+
+    return Inertia::render('Favourites', [
+        'fav' => $fav
+    ]);
+
+})->middleware('auth');
+Route::post('/toFavourites', function () {
+
+ Favourite::create([
+    'user_id' => Auth::id(),
+    'item_id' => request('item_id'),
+ ]);
+
+})->middleware('auth');
+
+
+Route::delete('/deleteFavourite', function () {
+    
+ Favourite::where([
+    'user_id' => Auth::id(),
+    'item_id' => request('item_id'),
+ ])->delete();
+})->middleware('auth');
+
+
+
 Route::get('/register', function () {
     return Inertia::render('Register');
 });
+
+
+
 Route::post('/register', function () {
     request()->validate([
         'name' =>  ['required', 'min:8'],
@@ -51,6 +86,9 @@ Route::post('/register', function () {
         'email' => request('email'),
         'password' => Hash::make(request('password'))
     ]);
-
-    return redirect('/');
+Inertia::flash('message', 'User created successfully!');
+    
+});
+Route::post('/logout', function () {
+    Auth::logout();
 });

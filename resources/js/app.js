@@ -4,5 +4,5 @@ import Layout from '../js/Pages/Shared/Layout.vue'
 
 createInertiaApp({
     layout: () => Layout,
-
+ 
 })

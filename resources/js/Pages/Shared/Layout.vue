@@ -3,7 +3,7 @@ import { Link } from "@inertiajs/vue3"
 
 </script>
 
-<template class="container2">
+<template class="container-custom">
          <header class="flex gap-2 justify-center">
             <Link href="/">Home</Link>
             <Link href="/login">Login</Link>

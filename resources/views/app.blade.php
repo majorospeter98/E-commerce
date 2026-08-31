@@ -5,7 +5,7 @@
         @vite('resources/js/app.js')
         <x-inertia::head />
     </head>
-    <body>
+    <body class="container-custom">
         <x-inertia::app />
     </body>
 </html>

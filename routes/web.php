@@ -42,8 +42,8 @@ return redirect('/')->with('error', 'Jelentkezz be!');
 
 //fav
 Route::get('/favourites', function () {
-$fav=Auth::user()->favourites;
 
+$fav=Auth::user()->favourites()->with('item')->get();
     return Inertia::render('Favourites', [
         'fav' => $fav
     ]);

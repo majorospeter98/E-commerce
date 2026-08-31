@@ -5,7 +5,15 @@
 </Head>
   <h1>Kedvenceid </h1>
   <section>
-    {{ fav }}
+   
+   <ul>
+    <li v-for="item in fav">
+            <div>
+                 <img class="h-[450px] w-[450px]" :src="`/Teams/${item.item.team}/${item.item.image}`">
+         <p>{{ item.item.team }}  {{ item.item.type }}  {{ item.item.brand }}</p>
+              </div>
+    </li>
+   </ul>
   </section>
   
 </template>

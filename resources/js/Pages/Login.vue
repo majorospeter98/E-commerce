@@ -1,11 +1,19 @@
 <template>
-  
-
-    <Form @submit.prevent="submitForm" action="/login" method="post">
-        <input type="email" name="email" v-model="form.email" />
+  <Head>
+    <title>Login page</title>
+    <meta name="description" content="Login page">
+</Head>
+<section class="border-2 border-b-amber-800 h-full ">
+    <Form @submit.prevent="submitForm" action="/login" method="post" class="flex flex-col gap-2">
+        <div>
+            <label for="email">Email
+        <input type="email" name="email" id ="email" v-model="form.email" />
+        </label>
+        </div>
     <input type="password" name="password" v-model="form.password" />
     <button type="submit">Login</button>
   </Form>
+</section>
 </template>
 
 <script setup>

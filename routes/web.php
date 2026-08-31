@@ -37,12 +37,12 @@ Route::post('/login', function () {
     if (Auth::attempt($validated)) {
         
     }
-    redirect("/");
+return redirect('/')->with('error', 'Jelentkezz be!');
 }) ->name('login');
 
 //fav
 Route::get('/favourites', function () {
-$fav=Favourite::get();
+$fav=Auth::user()->favourites;
 
     return Inertia::render('Favourites', [
         'fav' => $fav
@@ -77,7 +77,7 @@ Route::get('/register', function () {
 
 Route::post('/register', function () {
     request()->validate([
-        'name' =>  ['required', 'min:8'],
+        'name' =>  ['required', 'min:5'],
         'email' =>  ['required', 'min:8', 'email'],
         'password' => ['required', 'min:8']
     ]);
@@ -89,6 +89,6 @@ Route::post('/register', function () {
 Inertia::flash('message', 'User created successfully!');
     
 });
-Route::post('/logout', function () {
+Route::delete('/logout', function () {
     Auth::logout();
-});
+})->middleware('auth');

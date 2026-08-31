@@ -1,4 +1,8 @@
 <template>
+    <Head>
+    <title>Register page</title>
+    <meta name="description" content="Register page">
+</Head>
   {{ page }}
 
     <Form @submit.prevent="submitForm" action="/register" method="post" class="h-400 border-2 border-b-blue-700">

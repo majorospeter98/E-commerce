@@ -1,5 +1,8 @@
 <template>
-
+<Head>
+    <title>Favourites page</title>
+    <meta name="description" content="Showing the user favourite items">
+</Head>
   <h1>Kedvenceid </h1>
   <section>
     {{ fav }}

@@ -4,10 +4,7 @@
     <title>Show items</title>
     <meta name="description" content="Show items">
 </Head>
-{{ isFavourites }}
-
-
-  <h1>Valami</h1>
+ <h1>Valami</h1>
   <section class="flex container justify-between align-center text-center mt-6">
    <div>
   
@@ -38,8 +35,8 @@ import { Link } from '@inertiajs/vue3';
 const props=defineProps({item:Object, isFavourites:Array});
 
 
-const isFavourite =ref(props.isFavourites.some(
-    fav => fav.item_id === props.item.id
+const isFavourite =ref(props.isFavourites.find(
+    fav => fav.item_id === props.item.id 
 ))
 function toggleIsFavourite(){
   isFavourite.value = !isFavourite.value;

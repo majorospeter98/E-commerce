@@ -17,7 +17,7 @@ Route::get('/items', function () {
     ]);
 });
 Route::get('/items/{item}', function (Item $item) {
-     $test= Auth::user() ? Auth::user()->favourites()->get() : null;
+     $test= Auth::user() ? Auth::user()->favourites()->get() : [];
         return Inertia::render('items/Show', [
         'item' => $item,
         'isFavourites' => $test,

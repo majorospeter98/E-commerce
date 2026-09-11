@@ -28,7 +28,7 @@ Route::get('/', function () {
 });
 Route::get('/login', function () {
     return Inertia::render('Login');
-});
+})->middleware('guest') ;
 Route::post('/login', function () {
     $validated = request()->validate([
         'email' =>  ['required', 'min:8', 'email'],
@@ -38,7 +38,7 @@ Route::post('/login', function () {
         
     }
 return redirect('/')->with('error', 'Jelentkezz be!');
-}) ->name('login');
+})->middleware('guest') ->name('login');
 
 //fav
 Route::get('/favourites', function () {
@@ -71,7 +71,7 @@ Route::delete('/deleteFavourite', function () {
 
 Route::get('/register', function () {
     return Inertia::render('Register');
-});
+})->middleware('guest');
 
 
 
@@ -88,7 +88,7 @@ Route::post('/register', function () {
     ]);
 Inertia::flash('message', 'User created successfully!');
     
-});
+})->middleware('guest');
 Route::delete('/logout', function () {
     Auth::logout();
 })->middleware('auth');

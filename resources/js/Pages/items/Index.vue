@@ -13,6 +13,8 @@ defineProps({items:Array})
     <title>Index page</title>
     <meta name="description" content="Index page showing all items">
 </Head>
+
+<h1>26=26 Season starts now</h1>
 <section>
   <ul class="mt-6 flex flex-wrap justify-around text-center gap-4">
     <li v-for="item in items" :key="item.id">

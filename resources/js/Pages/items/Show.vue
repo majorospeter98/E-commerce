@@ -4,6 +4,8 @@
     <title>Show items</title>
     <meta name="description" content="Show items">
 </Head>
+{{ isFavourites }}
+
 
   <h1>Valami</h1>
   <section class="flex container justify-between align-center text-center mt-6">
@@ -33,11 +35,12 @@ import { faHeart as faHeartSolid } from '@fortawesome/free-solid-svg-icons'
 import { faHeart as faHeartRegular } from '@fortawesome/free-regular-svg-icons'
 import {Head} from '@inertiajs/vue3';
 import { Link } from '@inertiajs/vue3';
+const props=defineProps({item:Object, isFavourites:Array});
 
 
-
-defineProps({item:Object});
-let isFavourite= ref(false);
+const isFavourite =ref(props.isFavourites.some(
+    fav => fav.item_id === props.item.id
+))
 function toggleIsFavourite(){
   isFavourite.value = !isFavourite.value;
 }

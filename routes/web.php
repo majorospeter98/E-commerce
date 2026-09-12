@@ -39,9 +39,15 @@ Route::post('/login', function () {
         'password' => ['required', 'min:8']
     ]);
     if (Auth::attempt($validated)) {
-        
+        Inertia::flash('message', 'Sikeres bejelentkezés!');
+return redirect('/')->with('Sikeres Bejeltnkezés');
     }
-return redirect('/')->with('error', 'Jelentkezz be!');
+     Inertia::flash('message2', 'Sikertelen!');
+return back()
+    ->withErrors([
+        'email' => 'A megadatott adatokkal nincs fiók a rendszerben',
+    ])
+    ->withInput();
 })->middleware('guest') ->name('login');
 
 //fav
@@ -82,7 +88,7 @@ Route::get('/register', function () {
 Route::post('/register', function () {
     request()->validate([
         'name' =>  ['required', 'min:5'],
-        'email' =>  ['required', 'min:8', 'email'],
+        'email' =>  ['required', 'min:8', 'email', 'unique:users,email'],
         'password' => ['required', 'min:8']
     ]);
     User::create([
@@ -90,7 +96,7 @@ Route::post('/register', function () {
         'email' => request('email'),
         'password' => Hash::make(request('password'))
     ]);
-Inertia::flash('message', 'User created successfully!');
+return redirect('/login');
     
 })->middleware('guest');
 Route::delete('/logout', function () {

@@ -8,17 +8,37 @@
       <h1 class="mt-12 text-4xl mx-auto">Regisztráció</h1>
        <div class="mt-8 w-[90%] mx-auto">
             <label for="name">
-        <input type="text" name="name" id ="name" placeholder="Add meg az email címed" v-model="form.name" class="border border-2 w-[100%] p-1 pl-[10px] rounded-sm border-[#ced4da]" />
+        <input type="text" name="name" id ="name" required placeholder="Add meg a neved" v-model="form.name" class="border border-2 w-[100%] p-1 pl-[10px] rounded-sm border-[#ced4da]" />
         </label>
+     <div
+                        class="text-center text-red-500 mt-3"
+                        v-if="errors.name"
+                    >
+                        {{ errors.name }}
+                    </div>  
       </div>
        <div class="mt-8 w-[90%] mx-auto">
             <label for="email">
-        <input type="email" name="email" id ="email" placeholder="Add meg az email címed" v-model="form.email" class="border border-2 w-[100%] p-1 pl-[10px] rounded-sm border-[#ced4da]" />
-        </label>
+        <input type="email" name="email" id ="email" required placeholder="Add meg az email címed" v-model="form.email" class="border border-2 w-[100%] p-1 pl-[10px] rounded-sm border-[#ced4da]" />
+      </label>
+        <div
+                        class="text-center text-red-500 mt-3"
+                        v-if="errors.email"
+                    >
+                        {{ errors.email }}
+                    </div>    
+  
+
         </div>
         <div class="w-[90%] mx-auto mt-8">
-    <input type="password" name="password" v-model="form.password" placeholder="Add meg a jelszavad" class="border border-2 w-[100%] p-1 pl-[10px] rounded-sm border-[#ced4da]"  />
-        </div>
+    <input type="password" name="password" required v-model="form.password" placeholder="Add meg a jelszavad" class="border border-2 w-[100%] p-1 pl-[10px] rounded-sm border-[#ced4da]"  />
+  <div
+                        class="text-center text-red-500 mt-3"
+                        v-if="errors.password"
+                    >
+                        {{ errors.password }}
+                    </div>       
+</div>
         
 
         <div class="w-[90%] mx-auto mt-8">

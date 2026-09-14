@@ -7,7 +7,7 @@
   <section>
    
    <ul>
-    <li v-for="item in fav">
+    <li v-for="item in fav" :key="item.id">
             <div>
                  <img class="h-[450px] w-[450px]" :src="`/Teams/${item.item.team}/${item.item.image}`">
          <p>{{ item.item.team }}  {{ item.item.type }}  {{ item.item.brand }}</p>

@@ -42,14 +42,14 @@
         
 
         <div class="w-[90%] mx-auto mt-8">
-               <button class="w-[100%]  block p-4 bg-black text-white transition-opacity duration-250  hover:opacity-50 " type="submit">Bejelentkezés</button>
+               <button class="w-[100%]  block p-4 bg-black text-white transition-opacity duration-250  hover:opacity-50 " type="submit">Regisztráció</button>
                
         </div>
         <hr class="border border-t-1 mt-7 border-b-[#00000020] w-[90%] opacity-25 mx-auto ">
-          <div class="w-[90%] mx-auto mt-8">
-               <button class="w-[100%]  block p-4 bg-[#00000020] text-black transition-opacity duration-250  hover:opacity-75 " type="submit">Regisztráció</button>
+          <Link href="/login" class="w-[90%] mx-auto mt-8">
+               <button class="w-[100%]  block p-4 bg-[#00000020] text-black transition-opacity duration-250  hover:opacity-75 " type="submit">Bejelentkezés</button>
               
-        </div>
+        </Link>
 
   </Form>
 </section>

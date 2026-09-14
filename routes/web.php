@@ -31,7 +31,7 @@ Route::get('/', function () {
     return redirect('/items');
 });
 Route::get('/login', function () {
-    return Inertia::render('Login');
+    return Inertia::render('account/Login');
 })->middleware('guest') ;
 Route::post('/login', function () {
     $validated = request()->validate([
@@ -80,7 +80,7 @@ Route::delete('/deleteFavourite', function () {
 
 
 Route::get('/register', function () {
-    return Inertia::render('Register');
+    return Inertia::render('account/Register');
 })->middleware('guest');
 
 
@@ -99,6 +99,22 @@ Route::post('/register', function () {
 return redirect('/login');
     
 })->middleware('guest');
-Route::delete('/logout', function () {
+Route::delete('/account/logout', function () {
     Auth::logout();
 })->middleware('auth');
+
+
+Route::get('/cart', function () {
+    $cartItems=request()->all();
+    return Inertia::render('items/Cart',[
+'cart' => $cartItems,
+    ]);
+});
+Route::get('/account', function (){
+
+if(!Auth::user()){
+return redirect('/login');
+}
+
+return Inertia::render('account/Account');
+});

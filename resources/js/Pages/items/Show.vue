@@ -14,11 +14,10 @@
 <p>{{ item.type }}</p>
 <p>{{ item.team }}</p>
 <select v-model="selected">
-  <option disabled value="">Please select one</option>
+  <option disabled value="">Válassz egyet</option>
     <option v-for="size in item.size" :key="size.id">{{ size }}</option>
 </select>
 <div class="text-red-500 text-center" v-if="error">{{ error }}</div>
-{{ selected }}
   <button type="submit">Kosárba</button>
   <Link v-if="isFavourite" method="delete" href="/deleteFavourite" :data="{item_id: item.id}"><FontAwesomeIcon  :icon="faHeartSolid" @click="toggleIsFavourite"/></Link>
 
@@ -53,6 +52,7 @@ if(!selected.value){
 
 
   const sendItemtoStorage= {
+    id: crypto.randomUUID(),
     image : props.item.image,
     team : props.item.team,
     type : props.item.type,

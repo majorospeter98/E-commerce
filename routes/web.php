@@ -99,7 +99,7 @@ Route::post('/register', function () {
 return redirect('/login');
     
 })->middleware('guest');
-Route::delete('/account/logout', function () {
+Route::delete('/logout', function () {
     Auth::logout();
 })->middleware('auth');
 

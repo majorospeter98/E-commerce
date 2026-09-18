@@ -1,9 +1,11 @@
 <?php
 
 use App\Models\Favourite;
+use App\Models\OrderItem;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Models\Item;
+use App\Models\Order;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
@@ -17,13 +19,11 @@ Route::get('/items', function () {
     ]);
 });
 Route::get('/items/{item}', function (Item $item) {
-     $test= Auth::user() ? Auth::user()->favourites()->get() : [];
-        return Inertia::render('items/Show', [
+    $test = Auth::user() ? Auth::user()->favourites()->get() : [];
+    return Inertia::render('items/Show', [
         'item' => $item,
         'isFavourites' => $test,
     ]);
-
-   
 });
 
 
@@ -32,7 +32,7 @@ Route::get('/', function () {
 });
 Route::get('/login', function () {
     return Inertia::render('account/Login');
-})->middleware('guest') ;
+})->middleware('guest');
 Route::post('/login', function () {
     $validated = request()->validate([
         'email' =>  ['required', 'min:8', 'email'],
@@ -40,41 +40,39 @@ Route::post('/login', function () {
     ]);
     if (Auth::attempt($validated)) {
         Inertia::flash('message', 'Sikeres bejelentkezés!');
-return redirect('/')->with('Sikeres Bejeltnkezés');
+        return redirect('/')->with('Sikeres Bejeltnkezés');
     }
-     Inertia::flash('message2', 'Sikertelen!');
-return back()
-    ->withErrors([
-        'email' => 'A megadatott adatokkal nincs fiók a rendszerben',
-    ])
-    ->withInput();
-})->middleware('guest') ->name('login');
+    Inertia::flash('message2', 'Sikertelen!');
+    return back()
+        ->withErrors([
+            'email' => 'A megadatott adatokkal nincs fiók a rendszerben',
+        ])
+        ->withInput();
+})->middleware('guest')->name('login');
 
 //fav
 Route::get('/favourites', function () {
 
-$fav=Auth::user()->favourites()->with('item')->get();
+    $fav = Auth::user()->favourites()->with('item')->get();
     return Inertia::render('Favourites', [
         'fav' => $fav
     ]);
-
 })->middleware('auth');
 Route::post('/toFavourites', function () {
 
- Favourite::create([
-    'user_id' => Auth::id(),
-    'item_id' => request('item_id'),
- ]);
-
+    Favourite::create([
+        'user_id' => Auth::id(),
+        'item_id' => request('item_id'),
+    ]);
 })->middleware('auth');
 
 
 Route::delete('/deleteFavourite', function () {
-    
- Favourite::where([
-    'user_id' => Auth::id(),
-    'item_id' => request('item_id'),
- ])->delete();
+
+    Favourite::where([
+        'user_id' => Auth::id(),
+        'item_id' => request('item_id'),
+    ])->delete();
 })->middleware('auth');
 
 
@@ -96,8 +94,7 @@ Route::post('/register', function () {
         'email' => request('email'),
         'password' => Hash::make(request('password'))
     ]);
-return redirect('/login');
-    
+    return redirect('/login');
 })->middleware('guest');
 Route::delete('/logout', function () {
     Auth::logout();
@@ -105,16 +102,44 @@ Route::delete('/logout', function () {
 
 
 Route::get('/cart', function () {
-    $cartItems=request()->all();
-    return Inertia::render('items/Cart',[
-'cart' => $cartItems,
+    $cartItems = request()->all();
+    return Inertia::render('items/Cart', [
+        'cart' => $cartItems,
     ]);
 });
-Route::get('/account', function (){
+Route::get('/account', function () {
 
-if(!Auth::user()){
-return redirect('/login');
-}
+    if (!Auth::user()) {
+        return redirect('/login');
+    }
 
-return Inertia::render('account/Account');
+    return Inertia::render('account/Account');
+});
+Route::get('/order', function () {
+    return Inertia::render('account/Order');
+});
+Route::post('/order', function () {
+$orders = request('orders');
+       request()->validate([]);
+
+    $order = Order::create([
+
+        'user_id' => Auth::id()
+
+
+
+    ]);
+foreach($orders as $item) {
+
+
+    OrderItem::create([
+
+'item_id' => $item['item_id'],
+'order_id' => $order->id,
+'size' => $item['size'],
+'quantity' => $item['quantity']
+
+
+           ]);
+};
 });

@@ -53,11 +53,13 @@ if(!selected.value){
 
   const sendItemtoStorage= {
     id: crypto.randomUUID(),
+    item_id: props.item.id,
     image : props.item.image,
     team : props.item.team,
     type : props.item.type,
     brand: props.item.brand,
-    quantity : selected.value
+    size : selected.value,
+    quantity: 0,
   }
   const items= JSON.parse(localStorage.getItem('items') ?? '[]')
   items.push(sendItemtoStorage)

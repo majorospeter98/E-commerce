@@ -96,7 +96,7 @@ Route::post('/register', function () {
     ]);
     return redirect('/login');
 })->middleware('guest');
-Route::delete('/logout', function () {
+Route::delete('/account/logout', function () {
     Auth::logout();
 })->middleware('auth');
 
@@ -115,12 +115,17 @@ Route::get('/account', function () {
 
     return Inertia::render('account/Account');
 });
-Route::get('/order', function () {
-    return Inertia::render('account/Order');
-});
-Route::post('/order', function () {
-$orders = request('orders');
-       request()->validate([]);
+Route::get('/account/order', function () {
+    $orders = Auth::user()->orders()->with('items')->get();
+
+    return Inertia::render('account/Order', [
+        'orders' => $orders
+    ]);
+})->middleware('auth');
+Route::post('/account/order', function () {
+
+    $orderstoDB = request('orders');
+
 
     $order = Order::create([
 
@@ -129,17 +134,16 @@ $orders = request('orders');
 
 
     ]);
-foreach($orders as $item) {
+    foreach ($orderstoDB as $item) {
+
+        OrderItem::create([
+
+            'item_id' => $item['item_id'],
+            'order_id' => $order->id,
+            'size' => $item['size'],
+            'quantity' => $item['quantity']
 
 
-    OrderItem::create([
-
-'item_id' => $item['item_id'],
-'order_id' => $order->id,
-'size' => $item['size'],
-'quantity' => $item['quantity']
-
-
-           ]);
-};
+        ]);
+    };
 });

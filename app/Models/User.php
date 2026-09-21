@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use App\Models\Favourite;
-
+use App\Models\Order;
 #[Fillable(['name', 'email', 'password'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
@@ -33,5 +33,8 @@ class User extends Authenticatable
     }
     public function favourites(){
         return $this->hasMany(Favourite::class);
+    }
+    public function orders(){
+        return $this->hasMany(Order::class);
     }
 }

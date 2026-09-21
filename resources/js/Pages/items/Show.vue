@@ -59,7 +59,7 @@ if(!selected.value){
     type : props.item.type,
     brand: props.item.brand,
     size : selected.value,
-    quantity: 0,
+    quantity: 1,
   }
   const items= JSON.parse(localStorage.getItem('items') ?? '[]')
   items.push(sendItemtoStorage)

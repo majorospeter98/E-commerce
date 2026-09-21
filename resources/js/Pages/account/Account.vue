@@ -1,7 +1,8 @@
 <template>
 
   My Orders
-   <Link method="delete" href="/logout">Logout</Link>
+  <Link href="/order">My orders</Link>
+   <Link method="delete" href="/account/logout">Logout</Link>
 </template>
 
 <script setup>

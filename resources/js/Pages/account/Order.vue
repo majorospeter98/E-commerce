@@ -1,4 +1,8 @@
 <template>
+     <Head>
+    <title>Order page</title>
+    <meta name="description" content="Displaying your orders">
+</Head>
   <section>
     My orders
 
@@ -16,6 +20,7 @@
 </template>
 
 <script setup>
+import { Head } from '@inertiajs/vue3'
 defineProps({orders:Object})
 </script>
 

@@ -11,7 +11,7 @@ const auth = computed(() => page.props.auth);
 <template class="container-custom">
          <header class="flex gap-2 justify-between items-center mt-5">
             <div>
-         <img src="/public/ball.jpg" @click="router.get('/')" />
+         <img class="cursor-pointer" src="/public/ball.webp" @click="router.get('/')" />
     
         </div>
             <div class="flex gap-2">

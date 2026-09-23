@@ -1,4 +1,8 @@
 <template>
+    <Head>
+    <title>Cart page</title>
+    <meta name="description" content="Your cart, you can add/delete items">
+</Head>
     <section class="">
         <h1 class="text-3xl">Kosaram:</h1>
            <form  @submit.prevent="itemsToDatabase(items)">
@@ -43,6 +47,7 @@
 import { onMounted, ref } from "vue";
 import { Link } from "@inertiajs/vue3";
 import { router } from "@inertiajs/vue3";
+import { Head } from '@inertiajs/vue3'
 const items = ref([]);
 onMounted(() => {
     items.value = JSON.parse(localStorage.getItem("items"));

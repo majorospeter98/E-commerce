@@ -1,17 +1,12 @@
 
 
-<script setup>
-import { Head, router } from '@inertiajs/vue3';
 
-defineProps({items:Array})
-
-</script>
 
 
 <template>
 <Head>
-    <title>Index page</title>
-    <meta name="description" content="Index page showing all items">
+    <title>Main page</title>
+    <meta name="description" content="Main page showing all items">
 </Head>
 
 <h1 class="text-4xl text-bold">26/27 Season starts now</h1>
@@ -24,6 +19,12 @@ defineProps({items:Array})
   </ul>
 </section>
 </template>
+<script setup>
+import { Head} from '@inertiajs/vue3';
+import { router } from '@inertiajs/vue3';
+defineProps({items:Array})
+
+</script>
 <style>
 
 </style>>

@@ -3,7 +3,7 @@
     <title>Register page</title>
     <meta name="description" content="Register page">
 </Head>
-  <section class="mx-auto w-[650px]">
+  <section class="mx-auto min-w-[300px] w-[90%] lg:w-[650px]">
     <Form @submit.prevent="submitForm" action="/register" method="post" class="min-h-[60%] flex flex-col mx-auto border-1 border-gray shadow-sm  w-full">
       <h1 class="mt-12 text-4xl mx-auto">Regisztráció</h1>
        <div class="mt-8 w-[90%] mx-auto">

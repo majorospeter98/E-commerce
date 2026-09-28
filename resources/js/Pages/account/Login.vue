@@ -3,7 +3,7 @@
         <title>Login page</title>
         <meta name="description" content="Login page" />
     </Head>
-    <section class="mx-auto w-[650px]">
+    <section class="mx-auto min-w-[300px] w-[90%] lg:w-[650px]">
         <Form
             @submit.prevent="submitForm"
             action="/login"

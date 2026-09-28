@@ -3,15 +3,15 @@
     <title>Cart page</title>
     <meta name="description" content="Your cart, you can add/delete items">
 </Head>
-    <section class="">
-        <h1 class="text-3xl">Kosaram:</h1>
+    <section class="mt-7">
+        <h1 class="text-4xl font-bold">Kosaram:</h1>
            <form  @submit.prevent="itemsToDatabase(items)">
-        <ul v-if="items" class="flex-col flex">
+        <ul v-if='items.length>0' class="flex-col flex mt-8">
             <li v-for="item in items" :key="item.id" class="">
              
                     <div class="flex flex-col gap-8">
                         <div class="">
-                            <img :src="`/Teams/${item.team}/${item.image}`" />
+                            <img :src="`/Teams/150/${item.team}/${item.image}`" />
                         </div>
                         <div>
                             <p>{{ item.team }}</p>

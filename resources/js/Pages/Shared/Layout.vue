@@ -14,9 +14,9 @@ const auth = computed(() => page.props.auth);
          <img class="cursor-pointer" src="/public/ball.webp" @click="router.get('/')" />
     
         </div>
-            <div class="flex gap-2">
+            <div class="flex gap-2 mt-5 items-center">
            
-            <Link href="/account"><FontAwesomeIcon class="text-3xl w-5 h-5" :icon="faCircleUserRegular" /> </Link>
+            <Link href="/account"><FontAwesomeIcon class="text-[32px] w-8 h-8" :icon="faCircleUserRegular" /> </Link>
            <Link href="/cart">Cart</Link>
             </div>
                    

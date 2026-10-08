@@ -5,13 +5,13 @@
     <meta name="description" content="Show items">
 </Head>
 
-   <section class="flex flex-col  justify-between  mb-7 mt-6  md:flex-row">
+   <section class="flex flex-col items-center  justify-between  mb-7 mt-6  md:flex-row">
      <img class="h-[450px]  max-w-[450px]  object-contain" :src="`/Teams/450/${item.team}/${item.image}`">
    <div>
   
 
  </div>
- <div class="border border-pink-700 w-[90%]  md:w-[50%]">
+ <div class=" w-[90%]  md:w-[50%]">
   <form @submit.prevent="toCart" class="flex flex-col   align-middle items-center  ">
 <p class="text-4xl mt-8 text-center">{{ item.type }}  {{ item.team }}</p>
 <select class="border-2 border-black w-[80%] min-h-[40px] pl-2 mt-8 " v-model="selected">
@@ -21,9 +21,9 @@
 </select>
     <div class="text-red-500 text-center mt-5" v-if="error">{{ error }}</div>
 <div class="w-[80%] mt-8 mb-8 flex">
-  <button class="w-[90%] py-5 text-white rounded-lg bg-gray-900" type="submit">Kosárba</button>
-  <Link v-if="isFavourite" method="delete" href="/deleteFavourite" :data="{item_id: item.id}"><FontAwesomeIcon class="text-4xl text-red-500 ml-2 w-[10%]" :icon="faHeartSolid" @click="toggleIsFavourite"/></Link>
-   <Link v-if="!isFavourite" method="post" href="/toFavourites" :data="{item_id: item.id}">   <FontAwesomeIcon class="text-4xl ml-2  w-[10%] hover:text-red-500"  :icon="faHeartRegular" @click="toggleIsFavourite" href="/toDeleteFavourites" /></Link>
+  <button class="w-[90%] py-5 text-white rounded-lg bg-[#DC2626]" type="submit">Kosárba</button>
+  <Link v-if="isFavourite" method="delete" href="/deleteFavourite" :data="{item_id: item.id}"><FontAwesomeIcon class="text-4xl text-[#DC2626] ml-2 w-[10%]" :icon="faHeartSolid" @click="toggleIsFavourite"/></Link>
+   <Link v-if="!isFavourite" method="post" href="/toFavourites" :data="{item_id: item.id}">   <FontAwesomeIcon class="text-4xl ml-2  w-[10%] hover:text-[#DC2626]"  :icon="faHeartRegular" @click="toggleIsFavourite" href="/toDeleteFavourites" /></Link>
 </div>
   </form>
  </div>

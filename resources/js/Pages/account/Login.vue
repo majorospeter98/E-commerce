@@ -49,7 +49,7 @@
 
             <div class="w-[90%] mx-auto mt-8">
                 <button
-                    class="w-[100%] block p-4 bg-black text-white transition-opacity duration-250 hover:opacity-50"
+                    class="w-[100%] block p-4 bg-[#DC2626] text-white transition-opacity duration-250 hover:opacity-50"
                     type="submit"
                 >
                     Bejelentkezés
@@ -60,7 +60,7 @@
             />
             <div class="w-[90%] mx-auto mt-8">
                 <Link href="/register"
-                    class="w-[100%] block p-4 bg-[#00000020] text-black text-center transition-opacity duration-250 hover:opacity-75"
+                    class="w-[100%] block p-4 bg-black text-white text-center transition-opacity duration-250 hover:opacity-75"
                     type="submit"
                 >
                     Regisztráció

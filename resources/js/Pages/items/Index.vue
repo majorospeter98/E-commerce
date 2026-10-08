@@ -13,7 +13,7 @@
 <section>
   <ul class="mt-8 flex flex-wrap justify-around text-center gap-4 mb-9">
     <li v-for="item in items" :key="item.id">
-   <img class="hover:cursor-pointer  w-[350px] h-[350px]" @click="router.get('/items/' + item.id)" :src="`/Teams/350/${item.team}/${item.image}`">
+   <img class="hover:cursor-pointer  w-[350px] h-[350px] object-contain aspect-square" @click="router.get('/items/' + item.id)" :src="`/Teams/350/${item.team}/${item.image}`">
    <p class="mt-4">{{ item.type }} {{ item.brand }}</p>
         </li>
   </ul>

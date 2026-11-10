@@ -22,7 +22,6 @@
                     <div class="flex justify-between items-start">
                          
                         <div class="flex gap-7">
-                            
                             <img
                                 :src="`/Teams/150/${item.team}/${item.image}`"
                                 class="w-32 h-32 object-contain"
@@ -62,10 +61,15 @@
                 </li>
             </ul>
             <div>
-                <button class="w-[100px] bg-[#DC2626] text-white rounded-lg py-3" type="submit">Rendelés</button>
+                <button
+                    class="w-[100px] bg-[#DC2626] text-white rounded-lg py-3"
+                    type="submit"
+                >
+                    Rendelés
+                </button>
             </div>
         </form>
-        <h1 class="mt-5 font-bold text-4xl" v-else>Üres a kosarad</h1>
+        <h1 class="mt-5 text-3xl" v-else>Üres a kosarad.</h1>
     </section>
 
      
@@ -78,13 +82,13 @@ import { router } from "@inertiajs/vue3";
 import { Head } from "@inertiajs/vue3";
 const items = ref([]);
 onMounted(() => {
-items.value = JSON.parse(localStorage.getItem("items")) || [];
+    items.value = JSON.parse(localStorage.getItem("items")) || [];
 });
 
 function deleteItem(id) {
     items.value = items.value.filter((item) => item.id !== id);
     localStorage.setItem("items", JSON.stringify(items.value));
-   items.value = JSON.parse(localStorage.getItem("items")) || [];
+    items.value = JSON.parse(localStorage.getItem("items")) || [];
 }
 function itemsToDatabase() {
     const orders = [];
@@ -102,6 +106,6 @@ function itemsToDatabase() {
     });
 
     localStorage.removeItem("items");
-   items.value = JSON.parse(localStorage.getItem("items")) || [];
+    items.value = JSON.parse(localStorage.getItem("items")) || [];
 }
 </script>

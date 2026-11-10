@@ -59,7 +59,8 @@
                 class="border border-t-1 mt-7 border-b-[#00000020] w-[90%] opacity-25 mx-auto"
             />
             <div class="w-[90%] mx-auto mt-8">
-                <Link href="/register"
+                <Link
+                    href="/register"
                     class="w-[100%] block p-4 bg-black text-white text-center transition-opacity duration-250 hover:opacity-75"
                     type="submit"
                 >
@@ -68,7 +69,6 @@
             </div>
         </Form>
     </section>
-    
 </template>
 
 <script setup>

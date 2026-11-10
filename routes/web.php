@@ -51,10 +51,10 @@ Route::post('/login', function () {
 })->middleware('guest')->name('login');
 
 //fav
-Route::get('/favourites', function () {
+Route::get('/account/favourites', function () {
 
     $fav = Auth::user()->favourites()->with('item')->get();
-    return Inertia::render('Favourites', [
+    return Inertia::render('account/Favourites', [
         'fav' => $fav
     ]);
 })->middleware('auth');

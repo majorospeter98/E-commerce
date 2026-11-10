@@ -1,30 +1,27 @@
-
-
-
-
-
 <template>
-<Head>
-    <title>Main page</title>
-    <meta name="description" content="Main page showing all items">
-</Head>
+    <Head>
+        <title>Main page</title>
+        <meta name="description" content="Main page showing all items" />
+    </Head>
 
-<h1 class="text-4xl text-bold">26/27 Season starts now</h1>
-<section>
-  <ul class="mt-8 flex flex-wrap justify-around text-center gap-4 mb-9">
-    <li v-for="item in items" :key="item.id">
-   <img class="hover:cursor-pointer  w-[350px] h-[350px] object-contain aspect-square" @click="router.get('/items/' + item.id)" :src="`/Teams/350/${item.team}/${item.image}`">
-   <p class="mt-4">{{ item.type }} {{ item.brand }}</p>
-        </li>
-  </ul>
-</section>
+    <h1 class="text-4xl text-bold">26/27 Season starts now</h1>
+    <section>
+        <ul class="mt-8 flex flex-wrap justify-around text-center gap-4 mb-9">
+            <li v-for="item in items" :key="item.id">
+                <img
+                    class="hover:cursor-pointer w-[350px] h-[350px] object-contain aspect-square"
+                    @click="router.get('/items/' + item.id)"
+                    :src="`/Teams/350/${item.team}/${item.image}`"
+                />
+                <p class="mt-4">{{ item.type }} {{ item.brand }}</p>
+            </li>
+        </ul>
+    </section>
 </template>
 <script setup>
-import { Head} from '@inertiajs/vue3';
-import { router } from '@inertiajs/vue3';
-defineProps({items:Array})
-
+import { Head } from "@inertiajs/vue3";
+import { router } from "@inertiajs/vue3";
+defineProps({ items: Array });
 </script>
-<style>
-
-</style>>
+<style></style>
+>

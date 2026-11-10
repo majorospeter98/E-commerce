@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta property="og:title" content="E-commerce app with Vue.js,Laravel,Inertia.js" />
     <meta property="og:type" content="website" />
-  <meta property="og:description" content="Futballmezek online.">
+    <meta property="og:description" content="Futballmezek online.">
 
-<meta name="twitter:card" content="futball mezek kép">
+    <meta name="twitter:card" content="futball mezek kép">
     <meta name="twitter:title" content="Futball E-commerce Áruház">
     <meta name="twitter:description" content="Futballmezek és szurkolói felszerelések online.">
 

@@ -790,15 +790,6 @@ const idx = (i) => ({ "--i": i });
             </span>
         </button>
 
-        <!-- printed on the paper -->
-        <div class="tpf-z tpf-brand tpf-ink">
-            <div class="tpf-brand-top tpf-p" :style="idx(0)">
-                <span class="tpf-eye">{{ name }}</span>
-            </div>
-            <A :href="logoHref" class="tpf-word">
-                <span>{{ brand }}</span>
-            </A>
-        </div>
 
         <div class="tpf-z tpf-foot tpf-ink">
             <span class="tpf-p" :style="idx(3)">{{ copyright }}</span>

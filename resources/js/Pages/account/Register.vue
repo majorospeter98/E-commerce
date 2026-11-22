@@ -6,7 +6,7 @@
     <AuthShell
         title="Regisztráció"
         subtitle="Hozd létre a fiókod pár másodperc alatt."
-        :points="['Kedvencek mentése', 'Rendelések követése']"
+        :points="['Mentett kedvencek', 'Rendeléseid egy helyen']"
     >
         <form class="flex flex-col gap-4" @submit.prevent="submitForm">
             <FloatingInput

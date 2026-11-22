@@ -83,7 +83,7 @@ onBeforeUnmount(() => {
             <Link href="/" class="shrink-0" aria-label="football. home">
                 <img
                     src="/public/ball.webp"
-                    alt=""
+                    alt="football. logo"
                     width="48"
                     height="48"
                     class="size-12 object-contain transition-transform duration-500 ease-out hover:rotate-[24deg]"

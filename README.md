@@ -32,24 +32,16 @@
  
 <p> php artisan key:generate  </p>
 
-<p>  <strong> 5. Create the SQLite database </strong>  </p>
+<p>  <strong> 5. Run migrations and seed the database </strong>  </p>
+<p> php artisan migrate </p>
+<p> php artisan db:seed --class=ItemSeeder </p>
 
-<p> if not exist database\database.sqlite type nul > database\database.sqlite  </p>
-
-<p> Make sure .env contains:  </p>
-
-<p> DB_CONNECTION=sqlite  </p>
-
-<p>  <strong> 6. Run database migrations </strong>  </p>
-
-<p> php artisan migrate  </p>
-
-<p>  <strong> 7. Start the application </strong>  </p>
+<p>  <strong> 6. Start the application </strong>  </p>
 
 <p> Start the Laravel server:  </p>
 
-<p> php artisan serve l </p>
+<p> php artisan serve  </p>
 
-<p> In a separate terminal, start Vite: l </p>
+<p> In a separate terminal, start Vite:  </p>
 
-<p> npm run dev l </p>
+<p> npm run dev  </p>

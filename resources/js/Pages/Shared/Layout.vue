@@ -1,6 +1,7 @@
 <script setup>
 import { Link, router } from "@inertiajs/vue3";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
+import Footer from "./Footer.vue";
 </script>
 
 <template class="container-custom">
@@ -44,4 +45,5 @@ import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
     <main class="mt-6">
         <slot />
     </main>
+    <Footer class="mt-16" />
 </template>

@@ -536,7 +536,7 @@ const rootStyle = computed(() => ({
     "--tpf-sheet": props.sheet,
     "--tpf-paper": props.paper,
     "--tpf-on-sheet": props.sheetInk,
-    "--tpf-on-paper": props.paperInk || props.sheet,
+    "--tpf-on-paper": props.paperInk || mixHex(props.sheet, "#000000", 0.15),
     "--tpf-rim": mixHex(flapBase.value, "#ffffff", 0.6),
     "--tpf-sans": props.fontSans,
 }));
@@ -795,7 +795,7 @@ const idx = (i) => ({ "--i": i });
             <div class="tpf-brand-top tpf-p" :style="idx(0)">
                 <span class="tpf-eye">{{ name }}</span>
             </div>
-            <A :href="logoHref" class="tpf-word" :label="name">
+            <A :href="logoHref" class="tpf-word">
                 <span>{{ brand }}</span>
             </A>
         </div>
@@ -809,7 +809,7 @@ const idx = (i) => ({ "--i": i });
 </template>
 
 <style>
-.tpf{position:relative;overflow:hidden;container-type:size;min-height:520px;background:var(--tpf-sheet);color:var(--tpf-on-sheet);font-family:var(--tpf-sans);isolation:isolate;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;--ease:cubic-bezier(.22,1,.36,1);--u:1.4cqmin;--fs:max(12px,calc(1.85*var(--u)))}
+.tpf{position:relative;overflow:hidden;container-type:size;min-height:520px;background:var(--tpf-sheet);color:var(--tpf-on-sheet);font-family:var(--tpf-sans);isolation:isolate;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;--ease:cubic-bezier(.22,1,.36,1);--u:1.4cqmin;--fs:max(16px,calc(2.6*var(--u)))}
 .tpf{width:100vw;margin-left:calc(50% - 50vw)}
 .tpf-inner{position:absolute;top:0;bottom:0;left:0;right:0;width:min(1300px,90%);margin:0 auto}
 .tpf *,.tpf *::before,.tpf *::after{box-sizing:border-box}
@@ -854,7 +854,7 @@ const idx = (i) => ({ "--i": i });
 .tpf-badge{left:50%;top:31%;transform:translate(-50%,-50%);width:max(15px,calc(2.3*var(--u)));height:max(15px,calc(2.3*var(--u)))}
 .tpf-col{top:22%;display:grid;gap:max(5px,calc(.9*var(--u)));font-size:var(--fs)}
 .tpf-col.l{left:14%;justify-items:start}.tpf-col.r{right:14%;justify-items:end;text-align:right}
-.tpf-col h3{all:unset;display:flex;align-items:center;gap:1em;margin-bottom:max(4px,calc(.6*var(--u)));opacity:.75}
+.tpf-col h3{all:unset;display:flex;align-items:center;gap:1em;margin-bottom:max(4px,calc(.6*var(--u)))}
 .tpf-col.r h3{flex-direction:row-reverse}
 .tpf-col h3 .tpf-ico{width:1.1em;height:1.1em}
 .tpf-col ul{all:unset;display:grid;gap:max(4px,calc(.7*var(--u)));justify-items:inherit}
@@ -883,7 +883,7 @@ const idx = (i) => ({ "--i": i });
 .tpf-pin[data-pin=stab] .tpf-body{animation:tpf-stab .42s cubic-bezier(.55,0,.8,.2) both}
 .tpf-brand{left:50%;top:72%;width:max-content;transform:translateX(-50%);display:grid;justify-items:stretch}
 .tpf-brand-top{display:flex;align-items:center;justify-content:space-between;gap:1em;padding:0 .2em 0 .5em}
-.tpf-eye{font-size:max(15px,calc(2.6*var(--u)));letter-spacing:-.02em;background:linear-gradient(90deg,var(--tpf-on-paper),color-mix(in srgb,var(--tpf-on-paper) 35%,var(--tpf-paper)));-webkit-background-clip:text;background-clip:text;color:transparent}
+.tpf-eye{font-size:max(15px,calc(2.6*var(--u)));letter-spacing:-.02em}
 .tpf-word{display:block;overflow:hidden;padding:0 .04em .14em;font-size:max(44px,min(calc(9.5*var(--u)),16cqw));font-weight:500;letter-spacing:-.055em;line-height:.98;white-space:nowrap}
 .tpf-word span{display:block;position:relative;transition:transform 1s var(--ease) .5s}
 .tpf-word span::after{content:'';position:absolute;left:.02em;right:.04em;bottom:-.02em;height:max(2px,.045em);background:currentColor;transform-origin:0 50%;transition:transform .9s var(--ease) 1.05s,height .3s var(--ease)}
@@ -895,7 +895,7 @@ const idx = (i) => ({ "--i": i });
 .tpf-side:hover .tpf-ico{transform:translateY(-2px) rotate(-8deg)}
 .tpf-side span{background:linear-gradient(currentColor,currentColor) 0 100%/0 1px no-repeat;transition:background-size .4s var(--ease)}
 .tpf-side:hover span{background-size:100% 1px}
-.tpf-foot{left:0;right:0;bottom:4%;display:flex;align-items:center;justify-content:space-between;gap:1.5em;padding:0 15%;font-size:max(12px,calc(1.85*var(--u)))}
+.tpf-foot{left:0;right:0;bottom:4%;display:flex;align-items:center;justify-content:space-between;gap:1.5em;padding:0 15%;font-size:max(15px,calc(2.3*var(--u)))}
 .tpf-credit{position:absolute;left:50%;transform:translateX(-50%);font-size:max(10px,calc(1.4*var(--u)));letter-spacing:.08em;text-transform:uppercase;opacity:.62;white-space:nowrap}
 .tpf-handle:hover{text-decoration:underline;text-underline-offset:.2em}
 @container (max-width: 620px){

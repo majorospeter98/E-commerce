@@ -3,103 +3,79 @@
         <title>Register page</title>
         <meta name="description" content="Register page" />
     </Head>
-    <section class="mx-auto min-w-[300px] w-[90%] lg:w-[650px]">
-        <Form
-            @submit.prevent="submitForm"
-            action="/register"
-            method="post"
-            class="min-h-[60%] flex flex-col mx-auto border-1 border-gray shadow-sm w-full"
-        >
-            <h1 class="mt-12 text-4xl mx-auto">Regisztráció</h1>
-            <div class="mt-8 w-[90%] mx-auto">
-                <label for="name">
-                    <input
-                        type="text"
-                        name="name"
-                        id="name"
-                        required
-                        placeholder="Add meg a neved"
-                        v-model.trim="form.name"
-                        class="border border-2 w-[100%] p-1 pl-[10px] rounded-sm border-[#ced4da]"
-                    />
-                </label>
-                <div class="text-center text-red-500 mt-3" v-if="errors.name">
-                    {{ errors.name }}
-                </div>
-            </div>
-            <div class="mt-8 w-[90%] mx-auto">
-                <label for="email">
-                    <input
-                        type="email"
-                        name="email"
-                        id="email"
-                        required
-                        placeholder="Add meg az email címed"
-                        v-model.trim="form.email"
-                        class="border border-2 w-[100%] p-1 pl-[10px] rounded-sm border-[#ced4da]"
-                    />
-                </label>
-                <div class="text-center text-red-500 mt-3" v-if="errors.email">
-                    {{ errors.email }}
-                </div>
-            </div>
-            <div class="w-[90%] mx-auto mt-8">
-                <input
-                    type="password"
-                    name="password"
-                    required
-                    v-model.trim="form.password"
-                    placeholder="Add meg a jelszavad"
-                    class="border border-2 w-[100%] p-1 pl-[10px] rounded-sm border-[#ced4da]"
-                />
-                <div
-                    class="text-center text-red-500 mt-3"
-                    v-if="errors.password"
-                >
-                    {{ errors.password }}
-                </div>
-            </div>
-
-            <div class="w-[90%] mx-auto mt-8">
-                <button
-                    class="w-[100%] block p-4 bg-black text-white transition-opacity duration-250 hover:opacity-50"
-                    type="submit"
-                >
-                    Regisztráció
-                </button>
-            </div>
-            <hr
-                class="border border-t-1 mt-7 border-b-[#00000020] w-[90%] opacity-25 mx-auto"
+    <AuthShell
+        title="Regisztráció"
+        subtitle="Hozd létre a fiókod pár másodperc alatt."
+        :points="['Kedvencek mentése', 'Rendelések követése']"
+    >
+        <form class="flex flex-col gap-4" @submit.prevent="submitForm">
+            <FloatingInput
+                id="name"
+                label="Név"
+                autocomplete="name"
+                hint="Legalább 5 karakter"
+                :minlength="5"
+                v-model.trim="form.name"
+                :error="errors.name"
             />
-            <Link href="/login" class="w-[90%] mx-auto mt-8">
-                <button
-                    class="w-[100%] block p-4 bg-[#00000020] text-black transition-opacity duration-250 hover:opacity-75"
-                    type="submit"
-                >
-                    Bejelentkezés
-                </button>
+            <FloatingInput
+                id="email"
+                type="email"
+                label="Email cím"
+                autocomplete="email"
+                v-model.trim="form.email"
+                :error="errors.email"
+            />
+            <FloatingInput
+                id="password"
+                type="password"
+                label="Jelszó"
+                autocomplete="new-password"
+                hint="Legalább 8 karakter"
+                :minlength="8"
+                v-model.trim="form.password"
+                :error="errors.password"
+            />
+            <button
+                type="submit"
+                :disabled="isProcessing"
+                :aria-busy="isProcessing"
+                class="mt-2 h-14 w-full rounded-xl bg-brand text-base font-bold text-white shadow-[0_8px_20px_-8px_rgba(220,38,38,0.7)] transition-[background-color,transform,box-shadow] duration-200 hover:bg-brand-strong active:translate-y-px focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-wait disabled:opacity-70"
+            >
+                {{ isProcessing ? "Regisztráció…" : "Regisztráció" }}
+            </button>
+        </form>
+        <template #switch>
+            Már van fiókod?
+            <Link
+                href="/login"
+                class="font-bold text-neutral-950 underline decoration-brand decoration-2 underline-offset-4 hover:text-brand-strong"
+            >
+                Bejelentkezés
             </Link>
-        </Form>
-    </section>
+        </template>
+    </AuthShell>
 </template>
 
 <script setup>
-import { Form, router } from "@inertiajs/vue3";
+import { Head, Link, router } from "@inertiajs/vue3";
 import { ref } from "vue";
-import { Head } from "@inertiajs/vue3";
-import { Link } from "@inertiajs/vue3";
-import { usePage } from "@inertiajs/vue3";
-const page = usePage();
+import AuthShell from "../Shared/AuthShell.vue";
+import FloatingInput from "../Shared/FloatingInput.vue";
+
 defineProps({ errors: Object });
-let form = ref({
+
+const form = ref({
     name: "",
     email: "",
     password: "",
 });
-let submitForm = function () {
-    router.post("/Register", form);
+const isProcessing = ref(false);
+
+const submitForm = function () {
+    router.post("/register", form.value, {
+        onStart: () => (isProcessing.value = true),
+        onFinish: () => (isProcessing.value = false),
+    });
 };
 </script>
-
-<style></style>
->

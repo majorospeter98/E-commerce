@@ -4,6 +4,8 @@
 @source '../../storage/framework/views/*.php';
 
 @theme {
+    --color-brand: #dc2626;
+    --color-brand-strong: #b91c1c;
     --font-sans: 'Manrope', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }

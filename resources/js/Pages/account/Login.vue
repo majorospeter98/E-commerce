@@ -3,89 +3,67 @@
         <title>Login page</title>
         <meta name="description" content="Login page" />
     </Head>
-    <section class="mx-auto min-w-[300px] w-[90%] lg:w-[650px]">
-        <Form
-            @submit.prevent="submitForm"
-            action="/login"
-            method="post"
-            class="min-h-[60%] flex flex-col mx-auto border-1 border-gray shadow-sm w-full"
-        >
-            <h1 class="mt-12 text-4xl mx-auto">Bejelentkezés</h1>
-            <div class="mt-8 w-[90%] mx-auto">
-                <label for="email">
-                    <input
-                        type="email"
-                        name="email"
-                        id="email"
-                        placeholder="Add meg az email címed"
-                        v-model="form.email"
-                        required
-                        class="border border-2 w-[100%] p-1 pl-[10px] rounded-sm border-[#ced4da]"
-                    />
-                    <div
-                        class="text-center text-red-500 mt-3"
-                        v-if="errors.email"
-                    >
-                        {{ errors.email }}
-                    </div>
-                </label>
-            </div>
-            <div class="w-[90%] mx-auto mt-8">
-                <input
-                    type="password"
-                    name="password"
-                    v-model="form.password"
-                    placeholder="Add meg a jelszavad"
-                    required
-                    class="border border-2 w-[100%] p-1 pl-[10px] rounded-sm border-[#ced4da]"
-                />
-                <div
-                    class="text-center text-red-500 mt-3"
-                    v-if="errors.password"
-                >
-                    {{ errors.password }}
-                </div>
-            </div>
-
-            <div class="w-[90%] mx-auto mt-8">
-                <button
-                    class="w-[100%] block p-4 bg-[#DC2626] text-white transition-opacity duration-250 hover:opacity-50"
-                    type="submit"
-                >
-                    Bejelentkezés
-                </button>
-            </div>
-            <hr
-                class="border border-t-1 mt-7 border-b-[#00000020] w-[90%] opacity-25 mx-auto"
+    <AuthShell
+        title="Bejelentkezés"
+        subtitle="Üdv újra! Add meg az adataidat a folytatáshoz."
+        :points="['Mentett kedvencek', 'Rendeléseid egy helyen']"
+    >
+        <form class="flex flex-col gap-4" @submit.prevent="submitForm">
+            <FloatingInput
+                id="email"
+                type="email"
+                label="Email cím"
+                autocomplete="email"
+                v-model="form.email"
+                :error="errors.email"
             />
-            <div class="w-[90%] mx-auto mt-8">
-                <Link
-                    href="/register"
-                    class="w-[100%] block p-4 bg-black text-white text-center transition-opacity duration-250 hover:opacity-75"
-                    type="submit"
-                >
-                    Regisztráció
-                </Link>
-            </div>
-        </Form>
-    </section>
+            <FloatingInput
+                id="password"
+                type="password"
+                label="Jelszó"
+                autocomplete="current-password"
+                v-model="form.password"
+                :error="errors.password"
+            />
+            <button
+                type="submit"
+                :disabled="isProcessing"
+                :aria-busy="isProcessing"
+                class="mt-2 h-14 w-full rounded-xl bg-brand text-base font-bold text-white shadow-[0_8px_20px_-8px_rgba(220,38,38,0.7)] transition-[background-color,transform,box-shadow] duration-200 hover:bg-brand-strong active:translate-y-px focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-wait disabled:opacity-70"
+            >
+                {{ isProcessing ? "Bejelentkezés…" : "Bejelentkezés" }}
+            </button>
+        </form>
+        <template #switch>
+            Még nincs fiókod?
+            <Link
+                href="/register"
+                class="font-bold text-neutral-950 underline decoration-brand decoration-2 underline-offset-4 hover:text-brand-strong"
+            >
+                Regisztráció
+            </Link>
+        </template>
+    </AuthShell>
 </template>
 
 <script setup>
-import { Form, router } from "@inertiajs/vue3";
+import { Head, Link, router } from "@inertiajs/vue3";
 import { ref } from "vue";
-import { Head } from "@inertiajs/vue3";
-import { Link } from "@inertiajs/vue3";
+import AuthShell from "../Shared/AuthShell.vue";
+import FloatingInput from "../Shared/FloatingInput.vue";
 
 defineProps({ errors: Object });
 
-let form = ref({
+const form = ref({
     email: "",
     password: "",
 });
-let submitForm = function () {
-    router.post("/Login", form);
+const isProcessing = ref(false);
+
+const submitForm = function () {
+    router.post("/login", form.value, {
+        onStart: () => (isProcessing.value = true),
+        onFinish: () => (isProcessing.value = false),
+    });
 };
 </script>
-
-<style></style>

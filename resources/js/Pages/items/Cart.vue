@@ -35,17 +35,6 @@
                                 <p>{{ item.type }}</p>
                                 <p>{{ item.brand }}</p>
                                 <p>Méret: {{ item.size }}</p>
-                                 
-                                <div>
-                                    <label>Mennyiség:</label>
-                                     
-                                    <input
-                                        type="number"
-                                        min="1"
-                                        v-model.number="item.quantity"
-                                        class="border rounded px-2 py-1 ml-2 w-20"
-                                    />
-                                </div>
                             </div>
                         </div>
                          
@@ -89,6 +78,7 @@ function deleteItem(id) {
     items.value = items.value.filter((item) => item.id !== id);
     localStorage.setItem("items", JSON.stringify(items.value));
     items.value = JSON.parse(localStorage.getItem("items")) || [];
+    window.dispatchEvent(new Event("cart-updated"));
 }
 function itemsToDatabase() {
     const orders = [];
@@ -107,5 +97,6 @@ function itemsToDatabase() {
 
     localStorage.removeItem("items");
     items.value = JSON.parse(localStorage.getItem("items")) || [];
+    window.dispatchEvent(new Event("cart-updated"));
 }
 </script>

@@ -8,11 +8,12 @@
 @theme {
     --color-brand: #dc2626;
     --color-brand-strong: #b91c1c;
-    --font-sans: 'Manrope', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+    --font-display: 'Barlow Condensed', ui-sans-serif, system-ui, sans-serif;
+    --font-sans: 'Barlow Condensed', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
 :root {
-    --default-font-family: 'Manrope', sans-serif;
+    --default-font-family: 'Barlow Condensed', sans-serif;
     --page-bg: #ffffff;
     --page-ink: #171717;
     --page-muted: #525252;
@@ -113,4 +114,21 @@ body {
 
 input[type="search"]::-webkit-search-cancel-button {
     display: none;
+}
+
+@layer base {
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        font-family: var(--font-display);
+        font-weight: 700;
+        letter-spacing: 0.01em;
+    }
+
+    h1 {
+        text-transform: uppercase;
+    }
 }

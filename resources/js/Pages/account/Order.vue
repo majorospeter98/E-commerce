@@ -4,7 +4,7 @@
         <meta name="description" :content="t('orders.head_desc')" />
     </Head>
 
-    <h1 class="text-4xl font-extrabold tracking-tight text-balance">{{ t("orders.heading") }}</h1>
+    <h1 class="text-5xl tracking-tight text-balance">{{ t("orders.heading") }}</h1>
 
     <KitGrid v-if="props.orders.length > 0" class="mt-10 mb-12" :kits="kits" />
     <p v-else class="mt-12 mb-9 text-neutral-600 dark:text-neutral-400">{{ t("orders.empty") }}</p>

@@ -10,8 +10,8 @@ export default defineConfig({
             input: ['resources/js/app.ts'],
             refresh: true,
             fonts: [
-                bunny('Manrope', {
-                    weights: [400, 500, 600],
+                bunny('Barlow Condensed', {
+                    weights: [400, 500, 600, 700],
                 }),
             ],
         }),

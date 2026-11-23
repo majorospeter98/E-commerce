@@ -271,7 +271,7 @@ const props = withDefaults(
         paperInk: "",
         seed: 7,
         height: "52svh",
-        fontSans: '"Manrope", "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif',
+        fontSans: '"Barlow Condensed", "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif',
     },
 );
 

@@ -88,20 +88,26 @@
             </header>
 
             <div class="lines">
-                <div v-for="line in cartLines" :key="line.id" class="line">
-                    <img
-                        class="photo"
-                        :src="`/Teams/150/${line.team}/${line.image}`"
-                        :alt="`${line.team} ${kitType(line.type)}`"
-                    />
-                    <div>
-                        <b>{{ line.team }}</b>
-                        <span>{{ t("show.line_meta", { type: kitType(line.type), brand: line.brand, size: line.size }) }}</span>
+                <TransitionGroup name="line">
+                    <div v-for="line in cartLines" :key="line.id" class="line-wrap">
+                        <div class="line-clip">
+                            <div class="line">
+                                <img
+                                    class="photo"
+                                    :src="`/Teams/150/${line.team}/${line.image}`"
+                                    :alt="`${line.team} ${kitType(line.type)}`"
+                                />
+                                <div>
+                                    <b>{{ line.team }}</b>
+                                    <span>{{ t("show.line_meta", { type: kitType(line.type), brand: line.brand, size: line.size }) }}</span>
+                                </div>
+                                <button type="button" :aria-label="t('show.remove_label', { team: line.team, type: kitType(line.type) })" @click="removeLine(line.id)">
+                                    {{ t("show.remove") }}
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                    <button type="button" :aria-label="t('show.remove_label', { team: line.team, type: kitType(line.type) })" @click="removeLine(line.id)">
-                        {{ t("show.remove") }}
-                    </button>
-                </div>
+                </TransitionGroup>
                 <p v-if="!cartLines.length" class="empty">{{ t("show.empty") }}</p>
             </div>
 
@@ -426,6 +432,36 @@ summary::after {
 details[open] summary::after {
     rotate: 45deg;
 }
+/* smooth height + staggered rows (needs ::details-content, Chromium/Safari; others just toggle instantly) */
+details {
+    interpolate-size: allow-keywords;
+}
+details::details-content {
+    block-size: 0;
+    overflow: clip;
+    transition: block-size 0.5s var(--ease), content-visibility 0.5s allow-discrete;
+}
+details[open]::details-content {
+    block-size: auto;
+}
+dt,
+dd {
+    opacity: 0;
+    translate: 0 -6px;
+    filter: blur(3px);
+    transition: opacity 0.25s, translate 0.25s, filter 0.25s;
+}
+details[open] dt,
+details[open] dd {
+    opacity: 1;
+    translate: 0 0;
+    filter: none;
+    transition: opacity 0.5s var(--ease), translate 0.5s var(--ease), filter 0.5s var(--ease);
+}
+details[open] dt:nth-of-type(1), details[open] dd:nth-of-type(1) { transition-delay: 0.08s; }
+details[open] dt:nth-of-type(2), details[open] dd:nth-of-type(2) { transition-delay: 0.14s; }
+details[open] dt:nth-of-type(3), details[open] dd:nth-of-type(3) { transition-delay: 0.2s; }
+details[open] dt:nth-of-type(4), details[open] dd:nth-of-type(4) { transition-delay: 0.26s; }
 dl {
     display: grid;
     grid-template-columns: auto 1fr;
@@ -497,25 +533,59 @@ dd {
 .lines {
     padding: 1.25rem 1.5rem;
     display: grid;
-    gap: 1rem;
     align-content: start;
     overflow: auto;
 }
+.line-wrap {
+    display: grid;
+    grid-template-rows: 1fr;
+}
+.line-clip {
+    min-height: 0;
+    overflow: hidden;
+}
 .line {
+    position: relative;
     display: grid;
     grid-template-columns: 84px 1fr auto;
     gap: 1rem;
     align-items: center;
     padding: 0.75rem;
+    margin-bottom: 1rem;
     border-radius: 1rem;
     background: var(--surface);
-    animation: line-in 0.5s var(--ease) both;
+    overflow: hidden;
 }
-@keyframes line-in {
-    from {
-        opacity: 0;
-        translate: 20px 0;
-    }
+
+/* ADD: the card is revealed by a left-to-right wipe */
+.line-enter-active {
+    transition: grid-template-rows 0.55s var(--ease) 0.3s;
+}
+.line-enter-active .line {
+    transition: clip-path 0.7s var(--ease) 0.3s, opacity 0.5s 0.3s;
+}
+.line-enter-from {
+    grid-template-rows: 0fr;
+}
+.line-enter-from .line {
+    clip-path: inset(0 100% 0 0 round 1rem);
+    opacity: 0;
+}
+
+/* REMOVE: the card drifts out, blurs away and the list closes the gap */
+.line-leave-active {
+    transition: grid-template-rows 0.5s var(--ease) 0.12s;
+}
+.line-leave-active .line {
+    transition: translate 0.4s var(--ease), opacity 0.3s, filter 0.3s;
+}
+.line-leave-to {
+    grid-template-rows: 0fr;
+}
+.line-leave-to .line {
+    translate: 36px 0;
+    opacity: 0;
+    filter: blur(6px);
 }
 .line img {
     width: 84px;
@@ -568,7 +638,13 @@ dd {
     .show-main > .photo,
     .show-drawer,
     .show-scrim,
-    .line,
+    .line-enter-active,
+    .line-leave-active,
+    .line-enter-active .line,
+    .line-leave-active .line,
+    details::details-content,
+    dt,
+    dd,
     .sizes button,
     .cta,
     .heart svg {

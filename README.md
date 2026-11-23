@@ -12,6 +12,17 @@
 </ul>
 
 
+<h2> ** Screenshots ** </h2> 
+
+<img width="1920" height="949" alt="1" src="https://github.com/user-attachments/assets/a7f8fd86-5dec-4a65-9d82-f7b91753bec5" />
+<img width="1920" height="955" alt="2" src="https://github.com/user-attachments/assets/b2607910-67d2-4a10-aa7e-7707e992d7e9" />
+<img width="1911" height="949" alt="3" src="https://github.com/user-attachments/assets/60728fdb-4c84-4073-ad26-7530a81efa75" />
+<img width="1920" height="951" alt="4" src="https://github.com/user-attachments/assets/372a22f0-2c78-48f5-b4ab-ec527bbbe68b" />
+<img width="1919" height="948" alt="5" src="https://github.com/user-attachments/assets/08f93d11-2b6e-404b-ae7b-84bab9ec2082" />
+<img width="1918" height="953" alt="6" src="https://github.com/user-attachments/assets/d2b8ab2e-7a25-4a0a-ae68-7febdc798108" />
+
+
+
 <h2> ** Installation ** </h2> 
 
 <p>   <strong> 1. Clone the repository </strong> </p>

@@ -1,7 +1,8 @@
-<script setup>
+<script setup lang="ts">
 import { Link, router, usePage } from "@inertiajs/vue3";
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { useTheme } from "../../useTheme";
+import { readCartLines } from "@/cart";
 
 const { isDark, toggleTheme } = useTheme();
 const page = usePage();
@@ -11,7 +12,12 @@ const currentSearch = computed(
     () => new URLSearchParams(page.url.split("?")[1] ?? "").get("search") ?? "",
 );
 
-const categories = [
+interface Category {
+    label: string;
+    search: string;
+}
+
+const categories: Category[] = [
     { label: "All", search: "" },
     { label: "Home kits", search: "Home" },
     { label: "Away kits", search: "Away" },
@@ -21,39 +27,32 @@ const categories = [
 
 const isShopPage = computed(() => currentPath.value === "/items" || currentPath.value === "/");
 
-const isCategoryActive = (category) => currentSearch.value === category.search;
+const isCategoryActive = (category: Category): boolean => currentSearch.value === category.search;
 
-const categoryHref = (category) =>
+const categoryHref = (category: Category): string =>
     category.search ? "/items?search=" + encodeURIComponent(category.search) : "/items";
 
 const cartCount = ref(0);
 const readCart = () => {
-    try {
-        const stored = JSON.parse(localStorage.getItem("items") ?? "[]");
-        cartCount.value = Array.isArray(stored)
-            ? stored.reduce((sum, row) => sum + (Number(row.quantity) || 1), 0)
-            : 0;
-    } catch {
-        cartCount.value = 0;
-    }
+    cartCount.value = readCartLines().reduce((sum, row) => sum + (Number(row.quantity) || 1), 0);
 };
 
 const query = ref("");
-const searchRef = ref(null);
+const searchRef = ref<HTMLInputElement | null>(null);
 
 const submitSearch = () => {
     const term = query.value.trim();
     router.get("/items", term ? { search: term } : {});
 };
 
-const onKeydown = (event) => {
+const onKeydown = (event: KeyboardEvent): void => {
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
         event.preventDefault();
         searchRef.value?.focus();
     }
 };
 
-let stopNavigate = null;
+let stopNavigate: (() => void) | null = null;
 onMounted(() => {
     readCart();
     query.value = currentSearch.value;

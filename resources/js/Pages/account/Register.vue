@@ -57,13 +57,14 @@
     </AuthShell>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { Head, Link, router } from "@inertiajs/vue3";
 import { ref } from "vue";
+import type { FormErrors } from "@/types";
 import AuthShell from "../Shared/AuthShell.vue";
 import FloatingInput from "../Shared/FloatingInput.vue";
 
-defineProps({ errors: Object });
+defineProps<{ errors: FormErrors }>();
 
 const form = ref({
     name: "",

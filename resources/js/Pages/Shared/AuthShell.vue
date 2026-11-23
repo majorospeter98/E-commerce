@@ -1,10 +1,13 @@
-<script setup>
-defineProps({
-    title: { type: String, required: true },
-    subtitle: { type: String, required: true },
-    headline: { type: String, default: "" },
-    points: { type: Array, default: () => [] },
-});
+<script setup lang="ts">
+withDefaults(
+    defineProps<{
+        title: string;
+        subtitle: string;
+        headline?: string;
+        points?: string[];
+    }>(),
+    { headline: "", points: () => [] },
+);
 </script>
 
 <template>

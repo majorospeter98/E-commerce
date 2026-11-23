@@ -11,7 +11,7 @@
         <form
             class="flex flex-col md:flex md:flex-row md:justify-between mt-10"
             v-if="items.length > 0"
-            @submit.prevent="itemsToDatabase(items)"
+            @submit.prevent="itemsToDatabase"
         >
             <ul class="flex flex-col gap-4">
                 <li
@@ -64,24 +64,24 @@
      
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { onMounted, ref } from "vue";
 import { Link } from "@inertiajs/vue3";
 import { router } from "@inertiajs/vue3";
 import { Head } from "@inertiajs/vue3";
-const items = ref([]);
+import { readCartLines, writeCartLines } from "@/cart";
+import type { CartLine } from "@/types";
+const items = ref<CartLine[]>([]);
 onMounted(() => {
-    items.value = JSON.parse(localStorage.getItem("items")) || [];
+    items.value = readCartLines();
 });
 
-function deleteItem(id) {
-    items.value = items.value.filter((item) => item.id !== id);
-    localStorage.setItem("items", JSON.stringify(items.value));
-    items.value = JSON.parse(localStorage.getItem("items")) || [];
-    window.dispatchEvent(new Event("cart-updated"));
+function deleteItem(id: string) {
+    writeCartLines(items.value.filter((item) => item.id !== id));
+    items.value = readCartLines();
 }
 function itemsToDatabase() {
-    const orders = [];
+    const orders: Pick<CartLine, "id" | "item_id" | "size" | "quantity">[] = [];
     for (const item of items.value) {
         orders.push({
             id: item.id,
@@ -95,8 +95,7 @@ function itemsToDatabase() {
         orders: orders,
     });
 
-    localStorage.removeItem("items");
-    items.value = JSON.parse(localStorage.getItem("items")) || [];
-    window.dispatchEvent(new Event("cart-updated"));
+    writeCartLines([]);
+    items.value = [];
 }
 </script>

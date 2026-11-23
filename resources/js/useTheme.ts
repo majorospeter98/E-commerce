@@ -1,10 +1,10 @@
-import { ref } from "vue";
+import { ref, type Ref } from "vue";
 
 const STORAGE_KEY = "theme";
 
 const isDark = ref(typeof document !== "undefined" && document.documentElement.classList.contains("dark"));
 
-const applyTheme = (dark) => {
+const applyTheme = (dark: boolean): void => {
     const root = document.documentElement;
     root.classList.add("theme-transition");
     root.classList.toggle("dark", dark);
@@ -22,4 +22,4 @@ const toggleTheme = () => {
     }
 };
 
-export const useTheme = () => ({ isDark, toggleTheme });
+export const useTheme = (): { isDark: Ref<boolean>; toggleTheme: () => void } => ({ isDark, toggleTheme });

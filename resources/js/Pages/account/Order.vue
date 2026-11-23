@@ -1,9 +1,9 @@
 <template>
     <Head>
-        <title>Order page</title>
-        <meta name="description" content="Displaying your orders" />
+        <title>{{ t("orders.head_title") }}</title>
+        <meta name="description" :content="t('orders.head_desc')" />
     </Head>
-    <h1 class="text-3xl font-bold">Rendeléseim:</h1>
+    <h1 class="text-3xl font-bold">{{ t("orders.heading") }}</h1>
     <section v-if="props.orders.length > 0">
         <ul class="flex flex-wrap gap-4 justify-center text-center mt-5">
             <li
@@ -23,20 +23,23 @@
                         />
                     </p>
                     <p>{{ item.team }}</p>
-                    <p>{{ item.type }}</p>
+                    <p>{{ kitType(item.type) }}</p>
 
-                    <p>Méret: {{ item.pivot.size }}</p>
-                    <p>Mennyiség: {{ item.pivot.quantity }}</p>
+                    <p>{{ t("orders.size", { size: item.pivot.size }) }}</p>
+                    <p>{{ t("orders.quantity", { quantity: item.pivot.quantity }) }}</p>
                 </div>
             </li>
         </ul>
     </section>
-    <p class="mt-5 text-2xl" v-else>Nincs rendelésed.</p>
+    <p class="mt-5 text-2xl" v-else>{{ t("orders.empty") }}</p>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { Head } from "@inertiajs/vue3";
-const props = defineProps({ orders: Object });
+import type { Order } from "@/types";
+import { useTranslation } from "@/useTranslation";
+const props = defineProps<{ orders: Order[] }>();
+const { t, kitType } = useTranslation();
 </script>
 
 <style></style>

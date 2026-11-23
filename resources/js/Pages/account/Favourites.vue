@@ -27,9 +27,10 @@
     </section>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { Head } from "@inertiajs/vue3";
-const props = defineProps({ fav: Object });
+import type { Favourite } from "@/types";
+const props = defineProps<{ fav: Favourite[] }>();
 </script>
 
 <style></style>

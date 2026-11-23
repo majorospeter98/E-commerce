@@ -34,14 +34,15 @@
     </ul>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { Head, router, usePage } from "@inertiajs/vue3";
 import { computed } from "vue";
+import type { Item } from "@/types";
 
-const props = defineProps({ items: Array });
+const props = defineProps<{ items: Item[] }>();
 const page = usePage();
 
-const kitSrc = (item) => `/Teams/450/${item.team}/${item.image}`;
+const kitSrc = (item: Item) => `/Teams/450/${item.team}/${item.image}`;
 
 const filteredItems = computed(() => {
     const term = (new URLSearchParams(page.url.split("?")[1] ?? "").get("search") ?? "")

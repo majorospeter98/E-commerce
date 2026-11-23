@@ -1,6 +1,7 @@
-<script setup>
+<script setup lang="ts">
 import { Link, usePage } from "@inertiajs/vue3";
 import { computed, h, onBeforeUnmount, onMounted, reactive, ref, useId, watch } from "vue";
+import type { FunctionalComponent } from "vue";
 import { useTheme } from "../../useTheme";
 
 /* ---------------------------------------------------------------- tear --- */
@@ -8,9 +9,47 @@ const RIDGE_N = 84;
 const START = 1.06;
 const FLAPS = 6;
 
-const clamp01 = (v) => (Number.isFinite(v) ? (v < 0 ? 0 : v > 1 ? 1 : v) : 0);
+type Point = [number, number];
 
-function rng(seed) {
+interface Flap {
+    at: number;
+    span: number;
+    len: number;
+    skew: number;
+    dir: number;
+    jag: number[];
+}
+
+interface Tear {
+    ys: number[];
+    rim: number[];
+    lag: number[];
+    flaps: Flap[];
+}
+
+type TearMode = "wait" | "intro" | "morph" | "rest";
+
+interface TearState {
+    W: number;
+    H: number;
+    tear: Tear;
+    prev: Tear | null;
+    from: number[];
+    ys: number[];
+    mode: TearMode;
+    t0: number;
+    dur: number;
+    raf: number;
+    px: number;
+    py: number;
+    lift: number[];
+    busy: boolean;
+    seed: number;
+}
+
+const clamp01 = (v: number): number => (Number.isFinite(v) ? (v < 0 ? 0 : v > 1 ? 1 : v) : 0);
+
+function rng(seed: number): () => number {
     let a = (Number.isFinite(seed) ? Math.floor(seed) : 0) >>> 0;
     return () => {
         a = (a + 0x6d2b79f5) >>> 0;
@@ -23,7 +62,7 @@ function rng(seed) {
 
 const XS = (() => {
     const r = rng(911);
-    const out = [];
+    const out: number[] = [];
     for (let i = 0; i < RIDGE_N; i++) {
         const u = i / (RIDGE_N - 1);
         const j = i > 0 && i < RIDGE_N - 1 ? (r() - 0.5) * (0.8 / RIDGE_N) : 0;
@@ -32,19 +71,19 @@ const XS = (() => {
     return out;
 })();
 
-function ridgeFloor(x) {
+function ridgeFloor(x: number): number {
     const d = Math.abs(x - 0.5);
     if (d < 0.13) return 0.56;
     if (d < 0.25) return 0.58;
     return 0.6;
 }
 
-function makeTear(seed, n = RIDGE_N) {
+function makeTear(seed: number, n: number = RIDGE_N): Tear {
     const r = rng(seed);
     const ph = [r() * 6.283, r() * 6.283, r() * 6.283];
-    const ys = [];
-    const rim = [];
-    const lag = [];
+    const ys: number[] = [];
+    const rim: number[] = [];
+    const lag: number[] = [];
     for (let i = 0; i < n; i++) {
         const x = XS[Math.min(i, XS.length - 1)];
         const d = Math.min(1, Math.abs(x - 0.5) * 2);
@@ -74,39 +113,39 @@ function makeTear(seed, n = RIDGE_N) {
     return { ys, rim, lag, flaps };
 }
 
-function easeTear(t) {
+function easeTear(t: number): number {
     const x = clamp01(t);
     if (x === 0 || x === 1) return x;
     const c1 = 0.9;
     return 1 + (c1 + 1) * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2);
 }
 
-const easeInOut = (t) => {
+const easeInOut = (t: number): number => {
     const x = clamp01(t);
     return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
 };
 
-const introYs = (tear, t) => tear.ys.map((y, i) => START + (y - START) * easeTear((t - tear.lag[i]) / 0.5));
+const introYs = (tear: Tear, t: number): number[] => tear.ys.map((y, i) => START + (y - START) * easeTear((t - tear.lag[i]) / 0.5));
 
-const morphYs = (from, to, t) =>
+const morphYs = (from: number[], to: Tear, t: number): number[] =>
     to.ys.map((y, i) => {
         const a = from[i] ?? y;
         return a + (y - a) * easeInOut((t - to.lag[i] * 0.6) / 0.6);
     });
 
-const flapOpen = (tear, f, t) => easeTear((t - tear.lag[f.at] - 0.18) / 0.32);
+const flapOpen = (tear: Tear, f: Flap, t: number): number => easeTear((t - tear.lag[f.at] - 0.18) / 0.32);
 
-function flapPoly(ys, f, W, H, open) {
+function flapPoly(ys: number[], f: Flap, W: number, H: number, open: number): Point[] {
     const b = Math.min(ys.length - 1, f.at + f.span);
-    const top = [];
+    const top: Point[] = [];
     for (let k = f.at; k <= b; k++) top.push([XS[k] * W, ys[k] * H]);
     const A = top[0];
     const B = top[top.length - 1];
     const mx = (A[0] + B[0]) / 2;
     const my = (A[1] + B[1]) / 2;
     const L = f.len * H * Math.max(0, open);
-    const tip = [mx + f.skew * L, my + f.dir * L];
-    const side = (P, Q, j0, j1) => {
+    const tip: Point = [mx + f.skew * L, my + f.dir * L];
+    const side = (P: Point, Q: Point, j0: number, j1: number): Point[] => {
         const dx = Q[0] - P[0];
         const dy = Q[1] - P[1];
         const len = Math.hypot(dx, dy) || 1;
@@ -120,10 +159,10 @@ function flapPoly(ys, f, W, H, open) {
     return [...top, ...side(B, tip, f.jag[0], f.jag[1]), tip, ...side(tip, A, f.jag[2], f.jag[3])];
 }
 
-const n1 = (v) => Math.round(v * 10) / 10;
-const polyD = (pts) => (pts.length ? "M" + pts.map((p) => n1(p[0]) + " " + n1(p[1])).join("L") + "Z" : "");
+const n1 = (v: number): number => Math.round(v * 10) / 10;
+const polyD = (pts: Point[]): string => (pts.length ? "M" + pts.map((p) => n1(p[0]) + " " + n1(p[1])).join("L") + "Z" : "");
 
-function sheetD(ys, W, H, off) {
+function sheetD(ys: number[], W: number, H: number, off?: number[]): string {
     let d = "M-20 -20L" + (W + 20) + " -20";
     for (let i = ys.length - 1; i >= 0; i--) {
         d += "L" + n1(XS[i] * W) + " " + n1(ys[i] * H - (off ? off[i] : 0));
@@ -131,8 +170,8 @@ function sheetD(ys, W, H, off) {
     return d + "Z";
 }
 
-function mixHex(a, b, t) {
-    const p = (hex) => {
+function mixHex(a: string, b: string, t: number): string {
+    const p = (hex: string): number[] => {
         const s = hex.replace("#", "");
         const f = s.length === 3 ? s.split("").map((c) => c + c).join("") : s.padEnd(6, "0").slice(0, 6);
         return [0, 2, 4].map((i) => parseInt(f.slice(i, i + 2), 16) || 0);
@@ -144,7 +183,7 @@ function mixHex(a, b, t) {
 }
 
 /* --------------------------------------------------------------- icons --- */
-const ICONS = {
+const ICONS: Record<string, string> = {
     chevL: '<path d="M14.5 5.5 8 12l6.5 6.5" />',
     copy: '<path d="M13.5 4.5H7A2.5 2.5 0 0 0 4.5 7v10A2.5 2.5 0 0 0 7 19.5h10a2.5 2.5 0 0 0 2.5-2.5v-6.5" /><circle cx="18.5" cy="5.5" r="2.3" />',
     squiggle: '<path d="M3.5 15c1.8-3.2 3.6-3.2 5.4 0s3.6 3.2 5.4 0 3.6-3.2 5.4 0" />',
@@ -155,7 +194,7 @@ const ICONS = {
 };
 
 /* Small functional components: an icon and a link that picks Inertia <Link> for internal paths. */
-const Icon = (props) =>
+const Icon: FunctionalComponent<{ name: string }> = (props) =>
     h("svg", {
         viewBox: "0 0 24 24",
         class: "tpf-ico",
@@ -169,7 +208,7 @@ const Icon = (props) =>
     });
 Icon.props = ["name"];
 
-const A = (props, { slots }) => {
+const A: FunctionalComponent<{ href?: string; label?: string }> = (props, { slots }) => {
     const href = props.href;
     const common = { title: props.label, "aria-label": props.label };
     if (href && href.startsWith("/")) {
@@ -181,7 +220,7 @@ const A = (props, { slots }) => {
         {
             href: href || "#",
             ...common,
-            onClick: (e) => {
+            onClick: (e: MouseEvent) => {
                 if (!href || href === "#") e.preventDefault();
             },
             ...(external ? { target: "_blank", rel: "noopener noreferrer" } : {}),
@@ -192,48 +231,70 @@ const A = (props, { slots }) => {
 A.props = ["href", "label"];
 
 /* --------------------------------------------------------------- props --- */
-const props = defineProps({
-    brand: { type: String, default: "football." },
-    name: { type: String, default: "Majoros Péter" },
-    logoHref: { type: String, default: "/" },
-    email: { type: String, default: "" },
-    tagline: { type: String, default: "" },
-    status: { type: Object, default: () => ({ label: "browse the shop", href: "/items" }) },
-    mark: { type: String, default: "" },
-    timeZone: { type: String, default: "Europe/Budapest" },
-    timeLabel: { type: String, default: "BUD" },
-    copyright: { type: String, default: "© 2026 Majoros Péter" },
-    credit: { type: String, default: "" },
-    sheet: { type: String, default: "#DC2626" },
-    paper: { type: String, default: "#f3f3f1" },
-    sheetInk: { type: String, default: "#ffffff" },
-    paperInk: { type: String, default: "" },
-    seed: { type: Number, default: 7 },
-    height: { type: [String, Number], default: "52svh" },
-    fontSans: { type: String, default: '"Manrope", "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif' },
-});
+const props = withDefaults(
+    defineProps<{
+        brand?: string;
+        name?: string;
+        logoHref?: string;
+        email?: string;
+        tagline?: string;
+        status?: { label: string; href?: string };
+        mark?: string;
+        timeZone?: string;
+        timeLabel?: string;
+        copyright?: string;
+        credit?: string;
+        sheet?: string;
+        paper?: string;
+        sheetInk?: string;
+        paperInk?: string;
+        seed?: number;
+        height?: string | number;
+        fontSans?: string;
+    }>(),
+    {
+        brand: "football.",
+        name: "Majoros Péter",
+        logoHref: "/",
+        email: "",
+        tagline: "",
+        status: () => ({ label: "browse the shop", href: "/items" }),
+        mark: "",
+        timeZone: "Europe/Budapest",
+        timeLabel: "BUD",
+        copyright: "© 2026 Majoros Péter",
+        credit: "",
+        sheet: "#DC2626",
+        paper: "#f3f3f1",
+        sheetInk: "#ffffff",
+        paperInk: "",
+        seed: 7,
+        height: "52svh",
+        fontSans: '"Manrope", "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif',
+    },
+);
 
 /* --------------------------------------------------------------- state --- */
 const uid = useId().replace(/[^a-zA-Z0-9]/g, "");
-const rootRef = ref(null);
-const svgRef = ref(null);
-const sheetRef = ref(null);
-const rimRef = ref(null);
-const pinRef = ref(null);
-const flapEls = [];
-const gradEls = [];
-const timers = [];
+const rootRef = ref<HTMLElement | null>(null);
+const svgRef = ref<SVGSVGElement | null>(null);
+const sheetRef = ref<SVGPathElement | null>(null);
+const rimRef = ref<SVGPathElement | null>(null);
+const pinRef = ref<HTMLElement | null>(null);
+const flapEls: (SVGPathElement | null)[] = [];
+const gradEls: (SVGLinearGradientElement | null)[] = [];
+const timers: number[] = [];
 
 const still = ref(false);
 const stage = ref(0);
 const hit = ref(false);
 const visible = ref(false);
-const pin = ref("idle");
+const pin = ref<"idle" | "lift" | "stab">("idle");
 const toast = ref("");
 const grain = ref("");
 const clock = reactive({ h: "--", m: "--" });
 
-const s = {
+const s: TearState = {
     W: 0,
     H: 0,
     tear: makeTear(props.seed),
@@ -251,17 +312,17 @@ const s = {
     seed: props.seed,
 };
 
-const later = (fn, ms) => {
+const later = (fn: () => void, ms: number): void => {
     timers.push(window.setTimeout(fn, ms));
 };
 
 /* ------------------------------------------------------------- drawing --- */
-function frame(now) {
+function frame(now: number): void {
     s.raf = 0;
     const { W, H, tear } = s;
     if (!W || !H) return;
     let busy = false;
-    let ys;
+    let ys: number[];
     const open = new Array(FLAPS).fill(1);
     const openOld = new Array(FLAPS).fill(0);
     if (s.mode === "wait") {
@@ -297,7 +358,7 @@ function frame(now) {
 
     sheetRef.value?.setAttribute("d", sheetD(ys, W, H, tear.rim));
     rimRef.value?.setAttribute("d", sheetD(ys, W, H));
-    const draw = (k, f, o) => {
+    const draw = (k: number, f: Flap | null | undefined, o: number): void => {
         const el = flapEls[k];
         const g = gradEls[k];
         if (!el || !g) return;
@@ -305,7 +366,7 @@ function frame(now) {
         const pts = flapPoly(ys, f, W, H, o);
         el.setAttribute("d", polyD(pts));
         const b = Math.min(ys.length - 1, f.at + f.span);
-        const tip = pts[f.span + 3];
+        const tip = pts[f.span + 3] as Point;
         g.setAttribute("x1", String(((XS[f.at] + XS[b]) / 2) * W));
         g.setAttribute("y1", String(((ys[f.at] + ys[b]) / 2) * H));
         g.setAttribute("x2", String(tip[0]));
@@ -323,23 +384,25 @@ function kick() {
 }
 
 /* ------------------------------------------------------------ lifecycle --- */
-let ro = null;
-let io = null;
-let mq = null;
-let onMq = null;
+let ro: ResizeObserver | null = null;
+let io: IntersectionObserver | null = null;
+let mq: MediaQueryList | null = null;
+let onMq: (() => void) | null = null;
 let clockId = 0;
 
 onMounted(() => {
     // reduced motion
     if (typeof matchMedia !== "undefined") {
-        mq = matchMedia("(prefers-reduced-motion: reduce)");
-        onMq = () => (still.value = mq.matches);
+        const query = matchMedia("(prefers-reduced-motion: reduce)");
+        mq = query;
+        onMq = () => (still.value = query.matches);
         onMq();
-        mq.addEventListener("change", onMq);
+        query.addEventListener("change", onMq);
     }
 
     // size
     const el = rootRef.value;
+    if (!el) return;
     ro = new ResizeObserver(() => {
         s.W = el.clientWidth;
         s.H = el.clientHeight;
@@ -379,14 +442,14 @@ onMounted(() => {
 
     // clock
     if (props.timeZone) {
-        let f;
+        let f: Intl.DateTimeFormat;
         try {
             f = new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZone: props.timeZone });
         } catch {
             f = new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
         }
         const tick = () => {
-            const [hh, mm] = f.format(new Date()).split(":");
+            const [hh = "--", mm = "--"] = f.format(new Date()).split(":");
             clock.h = hh;
             clock.m = mm;
         };
@@ -446,7 +509,7 @@ watch(
 );
 
 /* ------------------------------------------------------------- actions --- */
-function onPointerMove(e) {
+function onPointerMove(e: PointerEvent): void {
     const el = rootRef.value;
     if (!el || still.value) return;
     const r = el.getBoundingClientRect();
@@ -495,7 +558,7 @@ function repin() {
     }, 1720);
 }
 
-function flash(msg) {
+function flash(msg: string): void {
     toast.value = msg;
     later(() => (toast.value = ""), 1600);
 }
@@ -567,8 +630,14 @@ const page = usePage();
 const isLoggedIn = computed(() => Boolean(page.props.auth));
 
 const mailto = computed(() => (props.email ? "mailto:" + props.email : "/items"));
-const cols = computed(() => {
-    const pages = {
+interface FooterColumn {
+    title: string;
+    links: { label: string; href: string }[];
+    cta?: { label: string; href: string };
+}
+
+const cols = computed((): FooterColumn[] => {
+    const pages: FooterColumn = {
         title: "pages",
         links: [
             { label: "Home", href: "/" },
@@ -580,7 +649,6 @@ const cols = computed(() => {
                       { label: "Register", href: "/register" },
                   ]),
         ],
-        cta: { label: "shop.", href: "/items" },
     };
     if (!isLoggedIn.value) return [pages];
     return [
@@ -595,7 +663,7 @@ const cols = computed(() => {
         },
     ];
 });
-const idx = (i) => ({ "--i": i });
+const idx = (i: number) => ({ "--i": i });
 </script>
 
 <template>
@@ -630,7 +698,7 @@ const idx = (i) => ({ "--i": i });
                     v-for="n in FLAPS * 2"
                     :key="n"
                     :id="uid + 'fg' + (n - 1)"
-                    :ref="(el) => (gradEls[n - 1] = el)"
+                    :ref="(el) => (gradEls[n - 1] = el as SVGLinearGradientElement | null)"
                     gradientUnits="userSpaceOnUse"
                 >
                     <stop offset="0" :stop-color="flapStops[0]" />
@@ -652,7 +720,7 @@ const idx = (i) => ({ "--i": i });
                 <path
                     v-for="n in FLAPS * 2"
                     :key="n"
-                    :ref="(el) => (flapEls[n - 1] = el)"
+                    :ref="(el) => (flapEls[n - 1] = el as SVGPathElement | null)"
                     :fill="'url(#' + uid + 'fg' + (n - 1) + ')'"
                 />
             </g>

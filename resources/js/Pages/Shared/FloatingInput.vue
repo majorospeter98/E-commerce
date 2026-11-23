@@ -1,17 +1,20 @@
-<script setup>
+<script setup lang="ts">
 import { computed, ref } from "vue";
 
-const props = defineProps({
-    id: { type: String, required: true },
-    label: { type: String, required: true },
-    type: { type: String, default: "text" },
-    autocomplete: { type: String, default: "off" },
-    error: { type: String, default: null },
-    hint: { type: String, default: null },
-    minlength: { type: Number, default: undefined },
-});
+const props = withDefaults(
+    defineProps<{
+        id: string;
+        label: string;
+        type?: string;
+        autocomplete?: string;
+        error?: string | null;
+        hint?: string | null;
+        minlength?: number;
+    }>(),
+    { type: "text", autocomplete: "off", error: null, hint: null, minlength: undefined },
+);
 
-const model = defineModel({ type: String, default: "" });
+const model = defineModel<string>({ default: "" });
 
 const isPasswordVisible = ref(false);
 const isPasswordField = computed(() => props.type === "password");

@@ -27,7 +27,7 @@
     </section>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { Link } from "@inertiajs/vue3";
 import { Head } from "@inertiajs/vue3";
 </script>

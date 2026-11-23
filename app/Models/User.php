@@ -10,8 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use App\Models\Favourite;
-use App\Models\Order;
+
 #[Fillable(['name', 'email', 'password'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
@@ -31,10 +30,14 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
-    public function favourites(){
+
+    public function favourites(): HasMany
+    {
         return $this->hasMany(Favourite::class);
     }
-    public function orders(){
+
+    public function orders(): HasMany
+    {
         return $this->hasMany(Order::class);
     }
 }

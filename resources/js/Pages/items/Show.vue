@@ -21,7 +21,7 @@
                     {{ item.type }} {{ item.team }}
                 </p>
                 <select
-                    class="border-2 border-black w-[80%] min-h-[40px] pl-2 mt-8"
+                    class="border-2 border-black bg-white text-neutral-900 dark:border-neutral-500 dark:bg-neutral-900 dark:text-neutral-100 w-[80%] min-h-[40px] pl-2 mt-8"
                     v-model="selected"
                 >
                     <option disabled value="">Válassz egyet</option>
@@ -29,7 +29,7 @@
                         {{ size }}
                     </option>
                 </select>
-                <div class="text-red-500 text-center mt-5" v-if="error">
+                <div class="text-red-500 dark:text-red-400 text-center mt-5" v-if="error">
                     {{ error }}
                 </div>
                 <div class="w-[80%] mt-8 mb-8 flex">
@@ -45,7 +45,7 @@
                         href="/deleteFavourite"
                         :data="{ item_id: item.id }"
                         ><FontAwesomeIcon
-                            class="text-4xl text-[#DC2626] ml-2 w-[10%]"
+                            class="text-4xl text-[#DC2626] dark:text-red-400 ml-2 w-[10%]"
                             :icon="faHeartSolid"
                             @click="toggleIsFavourite"
                     /></Link>
@@ -56,7 +56,7 @@
                         :data="{ item_id: item.id }"
                     >
                         <FontAwesomeIcon
-                            class="text-4xl ml-2 w-[10%] hover:text-[#DC2626]"
+                            class="text-4xl ml-2 w-[10%] hover:text-[#DC2626] dark:hover:text-red-400"
                             :icon="faHeartRegular"
                             @click="toggleIsFavourite"
                             href="/toDeleteFavourites"

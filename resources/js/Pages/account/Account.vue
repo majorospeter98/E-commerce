@@ -8,17 +8,17 @@
     </Head>
     <section class="flex flex-wrap justify-around gap-2 w-full">
         <div
-            class="rounded border-1 border-gray-400 min-w-[400px] w-[20%] h-[150px] flex justify-center items-center"
+            class="rounded border-1 border-gray-400 dark:border-neutral-600 min-w-[400px] w-[20%] h-[150px] flex justify-center items-center"
         >
             <Link href="/account/order">Rendeléseim</Link>
         </div>
         <div
-            class="rounded border-1 border-gray-400 min-w-[400px] w-[20%] h-[150px] flex justify-center items-center"
+            class="rounded border-1 border-gray-400 dark:border-neutral-600 min-w-[400px] w-[20%] h-[150px] flex justify-center items-center"
         >
             <Link href="/account/favourites">Kedvencek</Link>
         </div>
         <div
-            class="rounded border-1 border-gray-400 min-w-[400px] w-[20%] h-[150px] flex justify-center items-center"
+            class="rounded border-1 border-gray-400 dark:border-neutral-600 min-w-[400px] w-[20%] h-[150px] flex justify-center items-center"
         >
             <Link class="cursor-pointer" method="delete" href="/account/logout"
                 >Kijelentkezés</Link

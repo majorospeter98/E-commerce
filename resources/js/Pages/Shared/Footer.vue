@@ -1,6 +1,7 @@
 <script setup>
 import { Link, usePage } from "@inertiajs/vue3";
 import { computed, h, onBeforeUnmount, onMounted, reactive, ref, useId, watch } from "vue";
+import { useTheme } from "../../useTheme";
 
 /* ---------------------------------------------------------------- tear --- */
 const RIDGE_N = 84;
@@ -517,7 +518,12 @@ function toTop() {
 /* ------------------------------------------------------------- colours --- */
 const HEX = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
 const pinBase = computed(() => (HEX.test(props.sheet) ? props.sheet : "#DC2626"));
-const flapBase = computed(() => mixHex(HEX.test(props.paper) ? props.paper : "#f3f3f1", "#ffffff", 0.35));
+const { isDark } = useTheme();
+const paperColor = computed(() => (isDark.value ? "#171717" : props.paper));
+const paperInkColor = computed(() => (isDark.value ? "#f87171" : props.paperInk));
+const flapBase = computed(() =>
+    mixHex(HEX.test(paperColor.value) ? paperColor.value : "#f3f3f1", "#ffffff", isDark.value ? 0.1 : 0.35),
+);
 
 const pinColors = computed(() => ({
     hi: mixHex(pinBase.value, "#ffffff", 0.62),
@@ -534,9 +540,9 @@ const flapStops = computed(() => [
 const rootStyle = computed(() => ({
     height: typeof props.height === "number" ? props.height + "px" : props.height,
     "--tpf-sheet": props.sheet,
-    "--tpf-paper": props.paper,
+    "--tpf-paper": paperColor.value,
     "--tpf-on-sheet": props.sheetInk,
-    "--tpf-on-paper": props.paperInk || mixHex(props.sheet, "#000000", 0.15),
+    "--tpf-on-paper": paperInkColor.value || mixHex(props.sheet, "#000000", 0.15),
     "--tpf-rim": mixHex(flapBase.value, "#ffffff", 0.6),
     "--tpf-sans": props.fontSans,
 }));

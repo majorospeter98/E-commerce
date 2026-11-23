@@ -38,7 +38,7 @@
             Még nincs fiókod?
             <Link
                 href="/register"
-                class="font-bold text-neutral-950 underline decoration-brand decoration-2 underline-offset-4 hover:text-brand-strong"
+                class="font-bold text-neutral-950 dark:text-white dark:hover:text-red-400 underline decoration-brand decoration-2 underline-offset-4 hover:text-brand-strong"
             >
                 Regisztráció
             </Link>

@@ -1,7 +1,9 @@
 <script setup>
 import { Link, router, usePage } from "@inertiajs/vue3";
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
+import { useTheme } from "../../useTheme";
 
+const { isDark, toggleTheme } = useTheme();
 const page = usePage();
 const isLoggedIn = computed(() => Boolean(page.props.auth));
 const currentPath = computed(() => page.url.split("?")[0]);
@@ -69,8 +71,8 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <header class="relative left-1/2 mt-0 w-screen -translate-x-1/2 bg-white">
-        <div class="bg-neutral-950 text-[12.5px] font-semibold text-white">
+    <header class="relative left-1/2 mt-0 w-screen -translate-x-1/2 bg-white dark:bg-neutral-950">
+        <div class="bg-neutral-950 text-[12.5px] font-semibold text-white dark:border-b dark:border-neutral-800 dark:bg-neutral-900">
             <div class="mx-auto flex w-[90%] max-w-[1300px] items-center justify-between py-2">
                 <p class="flex items-center gap-2">
                     <span class="size-1.5 rounded-full bg-brand" aria-hidden="true"></span>
@@ -91,7 +93,7 @@ onBeforeUnmount(() => {
             </Link>
 
             <form
-                class="flex min-w-0 max-w-[620px] flex-1 items-center overflow-hidden rounded-xl border-[1.5px] border-neutral-950 focus-within:ring-2 focus-within:ring-brand focus-within:ring-offset-2"
+                class="flex min-w-0 max-w-[620px] flex-1 items-center overflow-hidden rounded-xl border-[1.5px] border-neutral-950 focus-within:ring-2 focus-within:ring-brand focus-within:ring-offset-2 dark:border-neutral-600 dark:focus-within:ring-offset-neutral-950"
                 role="search"
                 @submit.prevent="submitSearch"
             >
@@ -101,11 +103,11 @@ onBeforeUnmount(() => {
                     type="search"
                     placeholder="Search for a club, brand or kit"
                     aria-label="Search products"
-                    class="min-w-0 flex-1 bg-transparent px-4 py-3 text-sm text-neutral-900 outline-none placeholder:text-neutral-500"
+                    class="min-w-0 flex-1 bg-transparent px-4 py-3 text-sm text-neutral-900 outline-none placeholder:text-neutral-500 dark:text-neutral-100 dark:placeholder:text-neutral-400"
                 />
                 <button
                     type="submit"
-                    class="grid self-stretch bg-neutral-950 px-5 text-white transition-colors hover:bg-brand"
+                    class="grid self-stretch bg-neutral-950 px-5 text-white transition-colors hover:bg-brand dark:bg-brand dark:hover:bg-brand-strong"
                     aria-label="Search"
                 >
                     <svg viewBox="0 0 24 24" class="size-5 place-self-center" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -116,6 +118,22 @@ onBeforeUnmount(() => {
             </form>
 
             <div class="ml-auto flex items-center gap-5 sm:gap-7">
+                <button
+                    type="button"
+                    class="group flex flex-col items-center gap-0.5 rounded-md text-xs font-semibold focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand"
+                    :aria-label="isDark ? 'Switch to light mode' : 'Switch to dark mode'"
+                    :aria-pressed="isDark"
+                    @click="toggleTheme"
+                >
+                    <svg v-if="isDark" viewBox="0 0 24 24" class="size-6 transition-transform group-hover:-translate-y-0.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="12" cy="12" r="4" />
+                        <path d="M12 2.5v2M12 19.5v2M4.6 4.6 6 6M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4 6 18M18 6l1.4-1.4" />
+                    </svg>
+                    <svg v-else viewBox="0 0 24 24" class="size-6 transition-transform group-hover:-translate-y-0.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" />
+                    </svg>
+                    <span class="hidden sm:block">{{ isDark ? "Light" : "Dark" }}</span>
+                </button>
                 <Link href="/account" class="group flex flex-col items-center gap-0.5 text-xs font-semibold" aria-label="Account">
                     <svg viewBox="0 0 24 24" class="size-6 transition-transform group-hover:-translate-y-0.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <circle cx="12" cy="8.5" r="3.6" />
@@ -145,7 +163,7 @@ onBeforeUnmount(() => {
 
         <nav
             v-if="isShopPage"
-            class="border-t border-neutral-200"
+            class="border-t border-neutral-200 dark:border-neutral-800"
             aria-label="Categories"
         >
             <ul class="mx-auto flex w-[90%] max-w-[1300px] gap-7 max-sm:overflow-x-auto text-sm font-semibold sm:gap-9">
@@ -155,8 +173,8 @@ onBeforeUnmount(() => {
                         :class="[
                             'relative block py-3.5 transition-colors after:absolute after:inset-x-0 after:bottom-0 after:h-[3px] after:origin-left after:bg-brand after:transition-transform after:duration-300 hover:after:scale-x-100',
                             isCategoryActive(category)
-                                ? 'text-neutral-950 after:scale-x-100'
-                                : 'text-neutral-600 after:scale-x-0 hover:text-neutral-950',
+                                ? 'text-neutral-950 after:scale-x-100 dark:text-white'
+                                : 'text-neutral-600 after:scale-x-0 hover:text-neutral-950 dark:text-neutral-400 dark:hover:text-white',
                         ]"
                     >
                         {{ category.label }}

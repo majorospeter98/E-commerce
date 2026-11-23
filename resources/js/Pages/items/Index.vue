@@ -6,13 +6,17 @@
 
     <h1 class="text-4xl font-extrabold tracking-tight text-balance">Available items:</h1>
 
-    <p v-if="!filteredItems.length" class="mt-12 mb-9 text-neutral-600">
+    <p v-if="!filteredItems.length" class="mt-12 mb-9 text-neutral-600 dark:text-neutral-400">
         No products match your search.
     </p>
 
     <ul v-else class="kits mt-10 mb-12">
         <li v-for="(item, index) in filteredItems" :key="item.id" class="kit" :style="{ '--i': index }">
-            <Link :href="'/items/' + item.id" class="kit-link">
+            <a
+                :href="'/items/' + item.id"
+                class="kit-link"
+                @click.prevent="router.get('/items/' + item.id)"
+            >
                 <span class="kit-stage">
                     <img
                         class="kit-img"
@@ -25,13 +29,13 @@
                     <span class="kit-team">{{ item.team }}</span>
                     <span class="kit-meta">{{ item.type }} · {{ item.brand }}</span>
                 </span>
-            </Link>
+            </a>
         </li>
     </ul>
 </template>
 
 <script setup>
-import { Head, Link, usePage } from "@inertiajs/vue3";
+import { Head, router, usePage } from "@inertiajs/vue3";
 import { computed } from "vue";
 
 const props = defineProps({ items: Array });
@@ -84,6 +88,11 @@ const filteredItems = computed(() => {
 .kit-caption {
     display: block;
     margin-top: 0.75rem;
+    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.kit-link:hover .kit-caption,
+.kit-link:focus-visible .kit-caption {
+    transform: translateY(1.25rem);
 }
 .kit-team {
     display: inline;
@@ -95,7 +104,7 @@ const filteredItems = computed(() => {
 .kit-meta {
     display: block;
     font-size: 0.875rem;
-    color: #525252;
+    color: var(--page-muted);
 }
 
 /* Focus: the hovered kit comes forward, the rest recede into soft blur */
@@ -130,6 +139,7 @@ const filteredItems = computed(() => {
 }
 @media (prefers-reduced-motion: reduce) {
     .kit-img,
+    .kit-caption,
     .kit-team {
         transition: none;
     }

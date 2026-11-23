@@ -9,7 +9,7 @@ defineProps({
 
 <template>
     <section
-        class="auth-enter mx-auto my-4 grid w-full max-w-[1040px] overflow-hidden rounded-3xl bg-white shadow-[0_24px_60px_-20px_rgba(10,10,10,0.25)] ring-1 ring-black/5 lg:min-h-[640px] lg:grid-cols-[1fr_1.05fr]"
+        class="auth-enter mx-auto my-4 grid w-full max-w-[1040px] overflow-hidden rounded-3xl bg-white shadow-[0_24px_60px_-20px_rgba(10,10,10,0.25)] ring-1 ring-black/5 dark:bg-neutral-900 dark:shadow-none dark:ring-white/10 lg:min-h-[640px] lg:grid-cols-[1fr_1.05fr]"
     >
         <aside
             class="relative hidden overflow-hidden bg-neutral-950 p-12 text-white lg:flex lg:flex-col lg:justify-between"
@@ -72,15 +72,15 @@ defineProps({
             class="flex flex-col justify-center px-6 py-10 sm:px-12 lg:px-14 lg:py-14"
         >
             <h1
-                class="text-balance text-4xl font-extrabold tracking-tight text-neutral-950"
+                class="text-balance text-4xl font-extrabold tracking-tight text-neutral-950 dark:text-white"
             >
                 {{ title }}
             </h1>
-            <p class="mt-2 text-base text-neutral-600">{{ subtitle }}</p>
+            <p class="mt-2 text-base text-neutral-600 dark:text-neutral-400">{{ subtitle }}</p>
             <div class="mt-8">
                 <slot />
             </div>
-            <p class="mt-8 text-center text-sm text-neutral-600">
+            <p class="mt-8 text-center text-sm text-neutral-600 dark:text-neutral-400">
                 <slot name="switch" />
             </p>
         </div>

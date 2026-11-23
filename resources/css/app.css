@@ -3,6 +3,8 @@
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
     --color-brand: #dc2626;
     --color-brand-strong: #b91c1c;
@@ -11,10 +13,26 @@
 }
 :root {
     --default-font-family: 'Manrope', sans-serif;
+    --page-bg: #ffffff;
+    --page-ink: #171717;
+    --page-muted: #525252;
+}
+
+html.dark {
+    --page-bg: #0a0a0a;
+    --page-ink: #f5f5f5;
+    --page-muted: #a3a3a3;
 }
 
 html {
     overflow-x: clip;
+    color-scheme: light;
+    background-color: var(--page-bg);
+    color: var(--page-ink);
+}
+
+html.dark {
+    color-scheme: dark;
 }
 
 body {
@@ -23,6 +41,14 @@ body {
      max-width: 1300px;
         margin: 0 auto;
         width:90%;
-        
+
 }
 
+@media (prefers-reduced-motion: no-preference) {
+    html.theme-transition,
+    html.theme-transition *,
+    html.theme-transition *::before,
+    html.theme-transition *::after {
+        transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease !important;
+    }
+}

@@ -17,7 +17,7 @@
                 <li
                     v-for="item in items"
                     :key="item.id"
-                    class="bg-white rounded-lg p-4 shadow-sm"
+                    class="bg-white rounded-lg p-4 shadow-sm dark:bg-neutral-900 dark:ring-1 dark:ring-white/10"
                 >
                     <div class="flex justify-between items-start">
                          
@@ -41,7 +41,7 @@
                         <button
                             type="button"
                             @click="deleteItem(item.id)"
-                            class="text-red-500"
+                            class="text-red-500 dark:text-red-400"
                         >
                             X
                         </button>

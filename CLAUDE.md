@@ -1,3 +1,29 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Project
+Tech stack:
+Football e-commerce app: Laravel 13 + Inertia v3 + Vue 3 + Tailwind 4 (Vite 8), Pest 5 for tests, SQLite by default. 
+
+## Commands
+
+- `composer setup` — install deps, create `.env`, generate key, migrate, build assets
+- `composer dev` — runs `php artisan serve`, queue listener and Vite together
+- `php artisan db:seed --class=ItemSeeder` — seeds the product catalogue (not run by `DatabaseSeeder`)
+- `php artisan test --compact` / `php artisan test --compact tests/Feature/SomeTest.php` / `--filter=name` — run all / one file / one test
+- `vendor/bin/pint --dirty --format agent` — format changed PHP
+- `npm run build` / `npm run dev` — frontend assets
+
+## Architecture
+
+- **No controllers**: all routes are closures in `routes/web.php` (render Inertia pages, validate, and write to the DB inline). `app/Http/Controllers` only has the base class. Follow this style unless asked to refactor.
+- **Inertia**: pages in `resources/js/Pages/{account,items}`; `resources/js/app.js` sets `Shared/Layout.vue` (Header/Footer) as the default layout for every page. Shared props come from `HandleInertiaRequests` (`auth` is just a boolean). Flash messages use `Inertia::flash`.
+- **Cart is client-side**: stored in `localStorage` under `items` (see `Show.vue`, `Cart.vue`, `Header.vue`). Only checkout hits the server: `POST /account/order` takes `orders[]` (`item_id`, `size`, `quantity`), creates an `Order` plus `OrderItem` rows, then the client clears the storage.
+- **Models**: `Item` (`size` cast to array), `Order` ↔ `Item` many-to-many through the `order_items` pivot (with `size`, `quantity`), `Favourite` (user_id/item_id; toggled via `POST /toFavourites` and `DELETE /deleteFavourite`), `User`. Models use `$guarded = []`.
+- Search in the header calls `router.get('/items', { search })`, but the `/items` route currently ignores `search` and returns `Item::all()`.
+- `tests/` only contains the default example test.
+
 <laravel-boost-guidelines>
 === foundation rules ===
 

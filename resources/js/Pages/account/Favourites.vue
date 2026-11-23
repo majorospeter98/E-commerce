@@ -1,36 +1,33 @@
 <template>
     <Head>
-        <title>Favourites page</title>
-        <meta name="description" content="Showing the user favourite items" />
+        <title>{{ t("fav.head_title") }}</title>
+        <meta name="description" :content="t('fav.head_desc')" />
     </Head>
 
-    <section>
-        <h1 class="font-bold text-3xl">Kedvenceid:</h1>
-        <ul v-if="props.fav.length > 0">
-            <li v-for="item in fav" :key="item.id">
-                <div
-                    class="mt-5 mb-5 flex flex-col justify-center items-center text-center"
-                >
-                    <p>
-                        <img
-                            class="h-[350px] w-[350px]"
-                            :src="`/Teams/350/${item.item.team}/${item.item.image}`"
-                        />
-                    </p>
-                    <p>{{ item.item.team }}</p>
-                    <p>{{ item.item.type }}</p>
-                    <p>{{ item.item.brand }}</p>
-                </div>
-            </li>
-        </ul>
-        <p class="mt-5 text-2xl" v-else>Nincs kedvenced jelenleg.</p>
-    </section>
+    <h1 class="text-4xl font-extrabold tracking-tight text-balance">{{ t("fav.heading") }}</h1>
+
+    <KitGrid v-if="props.fav.length > 0" class="mt-10 mb-12" :kits="kits" />
+    <p v-else class="mt-12 mb-9 text-neutral-600 dark:text-neutral-400">{{ t("fav.empty") }}</p>
 </template>
 
 <script setup lang="ts">
 import { Head } from "@inertiajs/vue3";
+import { computed } from "vue";
+import KitGrid from "@/Pages/Shared/KitGrid.vue";
 import type { Favourite } from "@/types";
-const props = defineProps<{ fav: Favourite[] }>();
-</script>
+import { useTranslation } from "@/useTranslation";
 
-<style></style>
+const props = defineProps<{ fav: Favourite[] }>();
+const { t } = useTranslation();
+
+const kits = computed(() =>
+    props.fav.map((favourite) => ({
+        key: favourite.id,
+        href: `/items/${favourite.item.id}`,
+        team: favourite.item.team,
+        type: favourite.item.type,
+        brand: favourite.item.brand,
+        image: favourite.item.image,
+    })),
+);
+</script>

@@ -2,6 +2,7 @@
 import { Link, usePage } from "@inertiajs/vue3";
 import { computed, h, onBeforeUnmount, onMounted, reactive, ref, useId, watch } from "vue";
 import type { FunctionalComponent } from "vue";
+import { useTranslation } from "@/useTranslation";
 import { useTheme } from "../../useTheme";
 
 /* ---------------------------------------------------------------- tear --- */
@@ -258,7 +259,7 @@ const props = withDefaults(
         logoHref: "/",
         email: "",
         tagline: "",
-        status: () => ({ label: "browse the shop", href: "/items" }),
+        status: () => ({ label: "", href: "/items" }),
         mark: "",
         timeZone: "Europe/Budapest",
         timeLabel: "BUD",
@@ -566,7 +567,7 @@ function flash(msg: string): void {
 function copyEmail() {
     if (navigator.clipboard?.writeText) {
         navigator.clipboard.writeText(props.email).then(
-            () => flash("email copied"),
+            () => flash(t("footer.email_copied")),
             () => flash(props.email),
         );
     } else {
@@ -636,17 +637,19 @@ interface FooterColumn {
     cta?: { label: string; href: string };
 }
 
+const { t } = useTranslation();
+
 const cols = computed((): FooterColumn[] => {
     const pages: FooterColumn = {
-        title: "pages",
+        title: t("footer.pages"),
         links: [
-            { label: "Home", href: "/" },
-            { label: "Cart", href: "/cart" },
+            { label: t("footer.home"), href: "/" },
+            { label: t("footer.cart"), href: "/cart" },
             ...(isLoggedIn.value
                 ? []
                 : [
-                      { label: "Login", href: "/login" },
-                      { label: "Register", href: "/register" },
+                      { label: t("footer.login"), href: "/login" },
+                      { label: t("footer.register"), href: "/register" },
                   ]),
         ],
     };
@@ -654,11 +657,10 @@ const cols = computed((): FooterColumn[] => {
     return [
         pages,
         {
-            title: "account",
+            title: t("footer.account"),
             links: [
-                { label: "Account", href: "/account" },
-                { label: "Favourites", href: "/account/favourites" },
-                { label: "Orders", href: "/account/order" },
+                { label: t("footer.favourites"), href: "/account/favourites" },
+                { label: t("footer.orders"), href: "/account/order" },
             ],
         },
     ];
@@ -730,13 +732,13 @@ const idx = (i: number) => ({ "--i": i });
         <!-- on the sheet -->
         <div class="tpf-z tpf-top">
             <div class="tpf-row tpf-h" :style="idx(0)">
-                <button type="button" class="tpf-ib tpf-up" aria-label="Back to top" title="Back to top" @click="toTop">
+                <button type="button" class="tpf-ib tpf-up" :aria-label="t('footer.top')" :title="t('footer.top')" @click="toTop">
                     <Icon name="chevL" />
                 </button>
             </div>
             <div class="tpf-h" :style="{ ...idx(2), position: 'relative' }">
                 <template v-if="email">
-                    <button type="button" class="tpf-mail" :aria-label="'Copy ' + email" title="Copy email" @click="copyEmail">
+                    <button type="button" class="tpf-mail" :aria-label="t('footer.copy_email') + ' ' + email" :title="t('footer.copy_email')" @click="copyEmail">
                         <span>{{ email }}</span>
                         <Icon name="copy" />
                     </button>
@@ -752,7 +754,7 @@ const idx = (i: number) => ({ "--i": i });
             v-if="timeZone"
             class="tpf-z tpf-flank tpf-h"
             :style="{ ...idx(4), left: '76%' }"
-            :title="'Local time · ' + timeZone"
+            :title="t('footer.local_time') + ' · ' + timeZone"
         >
             <span class="tpf-clock">{{ timeLabel }} {{ clock.h }}<i aria-hidden="true">:</i>{{ clock.m }}</span>
         </span>
@@ -760,7 +762,7 @@ const idx = (i: number) => ({ "--i": i });
         <template v-if="status">
             <A :href="status.href ?? mailto" class="tpf-z tpf-status tpf-h" :style="idx(5)">
                 <i class="tpf-live" aria-hidden="true" />
-                <span>{{ status.label }}</span>
+                <span>{{ status.label || t('footer.status') }}</span>
             </A>
             <span class="tpf-z tpf-badge" aria-hidden="true">
                 <span class="tpf-h" :style="{ ...idx(6), display: 'block', width: '100%', height: '100%' }">
@@ -786,10 +788,10 @@ const idx = (i: number) => ({ "--i": i });
             :style="idx(6 + i)"
             :aria-label="c.title"
         >
-            <h3>
+            <p class="tpf-title">
                 {{ c.title }}
                 <Icon name="squiggle" />
-            </h3>
+            </p>
             <ul>
                 <li v-for="l in c.links" :key="l.label">
                     <A :href="l.href">{{ l.label }}</A>
@@ -804,8 +806,8 @@ const idx = (i: number) => ({ "--i": i });
             type="button"
             class="tpf-pin"
             :data-pin="pin"
-            aria-label="Re-pin: tear a new edge"
-            title="Pull the pin"
+            :aria-label="t('footer.repin')"
+            :title="t('footer.pin')"
             @click="repin"
         >
             <span class="tpf-shadow" aria-hidden="true" />
@@ -919,9 +921,9 @@ const idx = (i: number) => ({ "--i": i });
 .tpf-badge{left:50%;top:31%;transform:translate(-50%,-50%);width:max(15px,calc(2.3*var(--u)));height:max(15px,calc(2.3*var(--u)))}
 .tpf-col{top:22%;display:grid;gap:max(5px,calc(.9*var(--u)));font-size:var(--fs)}
 .tpf-col.l{left:14%;justify-items:start}.tpf-col.r{right:14%;justify-items:end;text-align:right}
-.tpf-col h3{all:unset;display:flex;align-items:center;gap:1em;margin-bottom:max(4px,calc(.6*var(--u)))}
-.tpf-col.r h3{flex-direction:row-reverse}
-.tpf-col h3 .tpf-ico{width:1.1em;height:1.1em}
+.tpf-col .tpf-title{all:unset;display:flex;align-items:center;gap:1em;margin-bottom:max(4px,calc(.6*var(--u)))}
+.tpf-col.r .tpf-title{flex-direction:row-reverse}
+.tpf-col .tpf-title .tpf-ico{width:1.1em;height:1.1em}
 .tpf-col ul{all:unset;display:grid;gap:max(4px,calc(.7*var(--u)));justify-items:inherit}
 .tpf-col li{list-style:none}
 .tpf-col li a{display:inline-block;transition:transform .35s var(--ease),opacity .25s}

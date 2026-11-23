@@ -1,14 +1,27 @@
 <?php
 
+use App\Http\Middleware\SetLocale;
 use App\Models\Favourite;
 use App\Models\Item;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
+
+Route::post('/locale', function () {
+    $validated = request()->validate([
+        'locale' => ['required', Rule::in(SetLocale::SUPPORTED_LOCALES)],
+    ]);
+
+    Cookie::queue('locale', $validated['locale'], 60 * 24 * 365);
+
+    return back();
+});
 
 Route::get('/items', function () {
     $items = Item::all();
@@ -37,22 +50,22 @@ Route::post('/login', function () {
         'email' => ['required', 'min:8', 'email'],
         'password' => ['required', 'min:8'],
     ], [
-        'email.required' => 'Add meg az email címedet.',
-        'email.email' => 'Ez nem érvényes email cím. Példa: nev@pelda.hu',
-        'email.min' => 'Az email cím legalább 8 karakter legyen.',
-        'password.required' => 'Add meg a jelszavadat.',
-        'password.min' => 'A jelszó legalább 8 karakter legyen.',
+        'email.required' => __('msg.email.required'),
+        'email.email' => __('msg.email.email'),
+        'email.min' => __('msg.email.min'),
+        'password.required' => __('msg.password.required'),
+        'password.min' => __('msg.password.min'),
     ]);
     if (Auth::attempt($validated)) {
-        Inertia::flash('message', 'Sikeres bejelentkezés!');
+        Inertia::flash('message', __('msg.login.success'));
 
         return redirect('/')->with('Sikeres Bejeltnkezés');
     }
-    Inertia::flash('message2', 'Sikertelen!');
+    Inertia::flash('message2', __('msg.login.failed'));
 
     return back()
         ->withErrors([
-            'email' => 'Hibás email cím vagy jelszó. Ellenőrizd az adatokat, vagy regisztrálj új fiókot.',
+            'email' => __('msg.login.invalid'),
         ])
         ->withInput();
 })->middleware('guest')->name('login');
@@ -92,14 +105,14 @@ Route::post('/register', function () {
         'email' => ['required', 'min:8', 'email', 'unique:users,email'],
         'password' => ['required', 'min:8'],
     ], [
-        'name.required' => 'Add meg a neved.',
-        'name.min' => 'A név legalább 5 karakter legyen.',
-        'email.required' => 'Add meg az email címedet.',
-        'email.email' => 'Ez nem érvényes email cím. Példa: nev@pelda.hu',
-        'email.min' => 'Az email cím legalább 8 karakter legyen.',
-        'email.unique' => 'Ezzel az email címmel már van fiók. Jelentkezz be.',
-        'password.required' => 'Add meg a jelszavadat.',
-        'password.min' => 'A jelszó legalább 8 karakter legyen.',
+        'name.required' => __('msg.name.required'),
+        'name.min' => __('msg.name.min'),
+        'email.required' => __('msg.email.required'),
+        'email.email' => __('msg.email.email'),
+        'email.min' => __('msg.email.min'),
+        'email.unique' => __('msg.email.unique'),
+        'password.required' => __('msg.password.required'),
+        'password.min' => __('msg.password.min'),
     ]);
     User::create([
         'name' => request('name'),
@@ -126,7 +139,11 @@ Route::get('/account', function () {
         return redirect('/login');
     }
 
-    return Inertia::render('account/Account');
+    return Inertia::render('account/Account', [
+        'name' => Auth::user()->name,
+        'orderCount' => Auth::user()->orders()->count(),
+        'favouriteCount' => Auth::user()->favourites()->count(),
+    ]);
 });
 Route::get('/account/order', function () {
     $orders = Auth::user()->orders()->with('items')->get();
@@ -155,4 +172,6 @@ Route::post('/account/order', function () {
 
         ]);
     }
-});
+
+    return redirect('/account/order');
+})->middleware('auth');

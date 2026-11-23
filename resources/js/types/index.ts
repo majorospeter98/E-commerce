@@ -24,6 +24,17 @@ export interface Order {
     items: OrderItem[];
 }
 
+/** A kit card shown by Shared/KitGrid.vue (shop, favourites and orders). */
+export interface Kit {
+    key: string | number;
+    href: string;
+    team: string;
+    type: string;
+    brand: string;
+    image: string;
+    details?: string[];
+}
+
 /** A line of the client-side cart, stored in localStorage under "items". */
 export interface CartLine {
     id: string;

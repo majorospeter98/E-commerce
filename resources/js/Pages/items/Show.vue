@@ -1,7 +1,7 @@
 <template>
     <Head>
-        <title>{{ item.team }} {{ item.type }}</title>
-        <meta name="description" :content="`${item.team} ${item.type} kit by ${item.brand}`" />
+        <title>{{ item.team }} {{ kitType(item.type) }}</title>
+        <meta name="description" :content="t('show.head_desc', { team: item.team, type: kitType(item.type), brand: item.brand })" />
     </Head>
 
     <section class="show">
@@ -17,19 +17,19 @@
                 class="photo"
                 :style="{ transformOrigin: zoomOrigin }"
                 :src="`/Teams/450/${item.team}/${item.image}`"
-                :alt="`${item.team} ${item.type} kit`"
+                :alt="t('kit.alt', { team: item.team, type: kitType(item.type) })"
             />
-            <span class="hint" :style="{ opacity: isZoomed ? 0 : 1 }">Hover to zoom</span>
+            <span class="hint" :style="{ opacity: isZoomed ? 0 : 1 }">{{ t("show.hover_zoom") }}</span>
         </div>
 
         <form class="show-info" @submit.prevent="toCart">
             <div>
-                <h1>{{ item.team }} {{ item.type }}</h1>
+                <h1>{{ item.team }} {{ kitType(item.type) }}</h1>
                 <p class="sub">{{ item.brand }}</p>
             </div>
 
             <fieldset class="show-size">
-                <legend>Méret</legend>
+                <legend>{{ t("show.size") }}</legend>
                 <div class="sizes">
                     <button
                         v-for="size in sizes"
@@ -45,7 +45,7 @@
             </fieldset>
 
             <div class="row">
-                <button ref="addButtonRef" type="submit" class="cta">Kosárba</button>
+                <button ref="addButtonRef" type="submit" class="cta">{{ t("show.add") }}</button>
                 <Link
                     :method="isFavourite ? 'delete' : 'post'"
                     :href="isFavourite ? '/deleteFavourite' : '/toFavourites'"
@@ -54,7 +54,7 @@
                     type="button"
                     class="heart"
                     :aria-pressed="isFavourite"
-                    :aria-label="isFavourite ? 'Eltávolítás a kedvencekből' : 'Mentés a kedvencek közé'"
+                    :aria-label="isFavourite ? t('show.fav_remove') : t('show.fav_add')"
                     @click="toggleIsFavourite"
                 >
                     <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -64,15 +64,15 @@
             </div>
 
             <details open>
-                <summary>Részletek</summary>
+                <summary>{{ t("show.details") }}</summary>
                 <dl>
-                    <dt>Csapat</dt>
+                    <dt>{{ t("show.team") }}</dt>
                     <dd>{{ item.team }}</dd>
-                    <dt>Típus</dt>
-                    <dd>{{ item.type }}</dd>
-                    <dt>Márka</dt>
+                    <dt>{{ t("show.type") }}</dt>
+                    <dd>{{ kitType(item.type) }}</dd>
+                    <dt>{{ t("show.brand") }}</dt>
                     <dd>{{ item.brand }}</dd>
-                    <dt>Méretek</dt>
+                    <dt>{{ t("show.sizes") }}</dt>
                     <dd>{{ sizes.join(", ") }}</dd>
                 </dl>
             </details>
@@ -81,10 +81,10 @@
 
     <Teleport to="body">
         <div class="show-scrim" :class="{ open: isDrawerOpen }" aria-hidden="true" @click="closeDrawer"></div>
-        <aside class="show-drawer" :class="{ open: isDrawerOpen }" role="dialog" aria-modal="true" aria-label="Kosár">
+        <aside class="show-drawer" :class="{ open: isDrawerOpen }" role="dialog" aria-modal="true" :aria-label="t('show.cart_label')">
             <header>
-                <span>Kosár ({{ cartLines.length }})</span>
-                <button ref="closeButtonRef" type="button" @click="closeDrawer">Bezár</button>
+                <span>{{ t("show.cart_count", { count: cartLines.length }) }}</span>
+                <button ref="closeButtonRef" type="button" @click="closeDrawer">{{ t("show.close") }}</button>
             </header>
 
             <div class="lines">
@@ -92,24 +92,24 @@
                     <img
                         class="photo"
                         :src="`/Teams/150/${line.team}/${line.image}`"
-                        :alt="`${line.team} ${line.type}`"
+                        :alt="`${line.team} ${kitType(line.type)}`"
                     />
                     <div>
                         <b>{{ line.team }}</b>
-                        <span>{{ line.type }} · {{ line.brand }} · Méret: {{ line.size }}</span>
+                        <span>{{ t("show.line_meta", { type: kitType(line.type), brand: line.brand, size: line.size }) }}</span>
                     </div>
-                    <button type="button" :aria-label="`${line.team} ${line.type} eltávolítása`" @click="removeLine(line.id)">
-                        Törlés
+                    <button type="button" :aria-label="t('show.remove_label', { team: line.team, type: kitType(line.type) })" @click="removeLine(line.id)">
+                        {{ t("show.remove") }}
                     </button>
                 </div>
-                <p v-if="!cartLines.length" class="empty">Üres a kosarad.</p>
+                <p v-if="!cartLines.length" class="empty">{{ t("show.empty") }}</p>
             </div>
 
             <footer>
                 <button type="button" class="cta" :disabled="!cartLines.length" @click="router.get('/cart')">
-                    Tovább a kosárhoz
+                    {{ t("show.to_cart") }}
                 </button>
-                <button type="button" class="ghost" @click="closeDrawer">Vásárlás folytatása</button>
+                <button type="button" class="ghost" @click="closeDrawer">{{ t("show.continue") }}</button>
             </footer>
         </aside>
     </Teleport>
@@ -120,8 +120,11 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref } from "vue";
 import { Head, Link, router } from "@inertiajs/vue3";
 import { readCartLines, writeCartLines } from "@/cart";
 import type { CartLine, Favourite, Item } from "@/types";
+import { useTranslation } from "@/useTranslation";
 
 const props = defineProps<{ item: Item; isFavourites: Pick<Favourite, "item_id">[] }>();
+
+const { t, kitType } = useTranslation();
 
 const sizes = computed(() => (Array.isArray(props.item.size) ? props.item.size : []));
 const error = ref("");
@@ -191,7 +194,7 @@ function removeLine(id: string): void {
 
 function toCart() {
     if (!selected.value) {
-        error.value = "Válaszd ki a méretet";
+        error.value = t("show.pick_size");
         return;
     }
 

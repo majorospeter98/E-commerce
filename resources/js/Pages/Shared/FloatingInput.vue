@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
+import { useTranslation } from "@/useTranslation";
 
 const props = withDefaults(
     defineProps<{
@@ -14,6 +15,7 @@ const props = withDefaults(
     { type: "text", autocomplete: "off", error: null, hint: null, minlength: undefined },
 );
 
+const { t } = useTranslation();
 const model = defineModel<string>({ default: "" });
 
 const isPasswordVisible = ref(false);
@@ -60,7 +62,7 @@ const describedBy = computed(() => {
                 type="button"
                 class="absolute right-1.5 top-1.5 flex size-11 items-center justify-center rounded-lg text-neutral-600 transition-colors hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white focus-visible:outline-2 focus-visible:outline-brand"
                 :aria-label="
-                    isPasswordVisible ? 'Jelszó elrejtése' : 'Jelszó megjelenítése'
+                    isPasswordVisible ? t('auth.hide_password') : t('auth.show_password')
                 "
                 :aria-pressed="isPasswordVisible"
                 @click="isPasswordVisible = !isPasswordVisible"

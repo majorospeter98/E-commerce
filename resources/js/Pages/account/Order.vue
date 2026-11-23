@@ -3,43 +3,37 @@
         <title>{{ t("orders.head_title") }}</title>
         <meta name="description" :content="t('orders.head_desc')" />
     </Head>
-    <h1 class="text-3xl font-bold">{{ t("orders.heading") }}</h1>
-    <section v-if="props.orders.length > 0">
-        <ul class="flex flex-wrap gap-4 justify-center text-center mt-5">
-            <li
-                class="flex flex-wrap gap-4 justify-center mb-5"
-                v-for="order in orders"
-                :key="order.id"
-            >
-                <div
-                    class="border-amber-950"
-                    v-for="item in order.items"
-                    :key="item.id"
-                >
-                    <p>
-                        <img
-                            class="h-[350px] w-[350px]"
-                            :src="`/Teams/350/${item.team}/${item.image}`"
-                        />
-                    </p>
-                    <p>{{ item.team }}</p>
-                    <p>{{ kitType(item.type) }}</p>
 
-                    <p>{{ t("orders.size", { size: item.pivot.size }) }}</p>
-                    <p>{{ t("orders.quantity", { quantity: item.pivot.quantity }) }}</p>
-                </div>
-            </li>
-        </ul>
-    </section>
-    <p class="mt-5 text-2xl" v-else>{{ t("orders.empty") }}</p>
+    <h1 class="text-4xl font-extrabold tracking-tight text-balance">{{ t("orders.heading") }}</h1>
+
+    <KitGrid v-if="props.orders.length > 0" class="mt-10 mb-12" :kits="kits" />
+    <p v-else class="mt-12 mb-9 text-neutral-600 dark:text-neutral-400">{{ t("orders.empty") }}</p>
 </template>
 
 <script setup lang="ts">
 import { Head } from "@inertiajs/vue3";
+import { computed } from "vue";
+import KitGrid from "@/Pages/Shared/KitGrid.vue";
 import type { Order } from "@/types";
 import { useTranslation } from "@/useTranslation";
-const props = defineProps<{ orders: Order[] }>();
-const { t, kitType } = useTranslation();
-</script>
 
-<style></style>
+const props = defineProps<{ orders: Order[] }>();
+const { t } = useTranslation();
+
+const kits = computed(() =>
+    props.orders.flatMap((order) =>
+        order.items.map((item) => ({
+            key: `${order.id}-${item.id}`,
+            href: `/items/${item.id}`,
+            team: item.team,
+            type: item.type,
+            brand: item.brand,
+            image: item.image,
+            details: [
+                t("orders.size", { size: item.pivot.size }),
+                t("orders.quantity", { quantity: item.pivot.quantity }),
+            ],
+        })),
+    ),
+);
+</script>

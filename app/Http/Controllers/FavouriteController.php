@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreFavouriteRequest;
 use App\Models\Favourite;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -26,11 +27,13 @@ class FavouriteController extends Controller
         ]);
     }
 
-    public function destroy(Request $request): void
+    public function destroy(Request $request): RedirectResponse
     {
         Favourite::where([
             'user_id' => Auth::id(),
             'item_id' => $request->input('item_id'),
         ])->delete();
+
+        return back();
     }
 }

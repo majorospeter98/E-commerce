@@ -16,6 +16,17 @@
                     <span v-for="line in kit.details" :key="line" class="kit-meta">{{ line }}</span>
                 </span>
             </a>
+            <button
+                v-if="removeLabel"
+                type="button"
+                class="kit-remove"
+                :aria-label="removeLabel(kit)"
+                @click="emit('remove', kit)"
+            >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" />
+                </svg>
+            </button>
         </li>
     </ul>
 </template>
@@ -25,7 +36,12 @@ import { router } from "@inertiajs/vue3";
 import type { Kit } from "@/types";
 import { useTranslation } from "@/useTranslation";
 
-defineProps<{ kits: Kit[] }>();
+defineProps<{
+    kits: Kit[];
+    /** When set, each card shows a remove button labelled by this function. */
+    removeLabel?: (kit: Kit) => string;
+}>();
+const emit = defineEmits<{ remove: [kit: Kit] }>();
 const { t, kitType } = useTranslation();
 </script>
 
@@ -34,6 +50,40 @@ const { t, kitType } = useTranslation();
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
     gap: 3rem 1.5rem;
+}
+.kit {
+    position: relative;
+}
+.kit-remove {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 9999px;
+    cursor: pointer;
+    color: #dc2626;
+    background: var(--page-bg);
+    box-shadow: 0 2px 8px rgb(0 0 0 / 0.15);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.3s, color 0.3s;
+}
+.kit-remove svg {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+.kit-remove:hover,
+.kit-remove:focus-visible {
+    transform: scale(1.1);
+    color: #fff;
+    background: #dc2626;
+}
+.kit-remove:focus-visible {
+    outline: 2px solid #dc2626;
+    outline-offset: 2px;
 }
 .kit-link {
     display: block;

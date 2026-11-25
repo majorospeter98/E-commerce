@@ -62,6 +62,7 @@
     "fav.head_desc": "A kedvenc termékeid",
     "fav.heading": "Kedvenceid:",
     "fav.empty": "Nincs kedvenced jelenleg.",
+    "fav.remove": ":team eltávolítása a kedvencekből",
     "orders.head_title": "Rendeléseim",
     "orders.head_desc": "A rendeléseid",
     "orders.heading": "Rendeléseim:",

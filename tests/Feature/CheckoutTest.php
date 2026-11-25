@@ -42,3 +42,13 @@ test('favouriting the same item twice does not duplicate it', function () {
 
     expect($user->favourites()->count())->toBe(1);
 });
+
+test('a favourite can be removed', function () {
+    $user = User::factory()->create();
+    $item = Item::create(['team' => 'Arsenal', 'type' => 'Hazai', 'brand' => 'Adidas', 'image' => 'a.png', 'quantity' => '5', 'size' => 'M']);
+    $user->favourites()->create(['item_id' => $item->id]);
+
+    $this->actingAs($user)->delete('/deleteFavourite', ['item_id' => $item->id])->assertRedirect();
+
+    expect($user->favourites()->count())->toBe(0);
+});

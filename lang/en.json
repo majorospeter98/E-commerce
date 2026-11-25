@@ -62,6 +62,7 @@
     "fav.head_desc": "Your favourite items",
     "fav.heading": "Your favourites:",
     "fav.empty": "You have no favourites yet.",
+    "fav.remove": "Remove :team from favourites",
     "orders.head_title": "My orders",
     "orders.head_desc": "Your orders",
     "orders.heading": "My orders:",

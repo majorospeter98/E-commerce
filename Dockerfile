@@ -44,4 +44,4 @@ RUN mkdir -p bootstrap/cache storage/app/public storage/logs storage/framework/c
 
 EXPOSE 80
 
-CMD ["sh", "-c", "touch \"$DB_DATABASE\" && php artisan migrate --force && php artisan optimize && chown -R www-data:www-data storage bootstrap/cache && exec apache2-foreground"]
+CMD ["sh", "-c", "touch \"$DB_DATABASE\" && php artisan migrate --force && php artisan db:seed --class=ItemSeeder --force && php artisan optimize && chown -R www-data:www-data storage bootstrap/cache && exec apache2-foreground"]

@@ -4,7 +4,7 @@
         <meta name="description" :content="t('items.head_desc')" />
     </Head>
 
-    <h1 class="text-5xl tracking-tight text-balance">{{ t("items.heading") }}</h1>
+    <h1 class="page-title">{{ t("items.heading") }}</h1>
 
     <p v-if="!filteredItems.length" class="mt-12 mb-9 text-neutral-600 dark:text-neutral-400">
         {{ t("items.empty") }}

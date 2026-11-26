@@ -11,6 +11,7 @@ interface Translation {
     locale: ComputedRef<Locale>;
     t: (key: string, replacements?: Replacements) => string;
     kitType: (type: string) => string;
+    garment: (image: string) => string;
     setLocale: (locale: Locale) => void;
 }
 
@@ -31,6 +32,9 @@ export const useTranslation = (): Translation => {
     /** Kit types ("Home", "Away") are data values; translate them when a label exists. */
     const kitType = (type: string): string => strings.value[`kit.type.${type}`] ?? type;
 
+    /** The catalogue has no garment column; shorts are recognised by their image name. */
+    const garment = (image: string): string => t(image.startsWith("short") ? "kit.shorts" : "kit.shirt");
+
     const setLocale = (next: Locale): void => {
         if (next === locale.value) {
             return;
@@ -38,5 +42,5 @@ export const useTranslation = (): Translation => {
         router.post("/locale", { locale: next }, { preserveScroll: true, preserveState: true });
     };
 
-    return { locale, t, kitType, setLocale };
+    return { locale, t, kitType, garment, setLocale };
 };

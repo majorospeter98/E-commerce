@@ -6,9 +6,9 @@
             :content="t('account.head_desc')"
         />
     </Head>
-    <section class="mx-auto w-full max-w-5xl px-4">
+    <section class="w-full max-w-5xl">
         <header class="mb-8">
-            <h1 class="text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
+            <h1 class="page-title">
                 {{ t("account.greeting", { name }) }}
             </h1>
             <p class="mt-2 text-neutral-600 dark:text-neutral-400">
@@ -45,7 +45,7 @@
                 class="group flex min-h-44 flex-col justify-between rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm transition duration-300 ease-out hover:-translate-y-1 hover:border-neutral-900 hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-900 dark:border-neutral-800 dark:bg-neutral-900 dark:hover:border-neutral-300 dark:focus-visible:outline-neutral-300"
             >
                 <span class="flex items-start justify-between">
-                    <span class="flex size-12 items-center justify-center rounded-2xl bg-rose-50 text-rose-600 dark:bg-rose-950 dark:text-rose-400">
+                    <span class="flex size-12 items-center justify-center rounded-2xl bg-neutral-100 text-brand dark:bg-brand dark:text-white">
                         <svg class="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z" />
                         </svg>
@@ -67,9 +67,9 @@
             as="button"
             method="delete"
             href="/account/logout"
-            class="group mt-4 flex w-full cursor-pointer items-center gap-4 rounded-2xl border border-neutral-200 px-5 py-4 text-left transition duration-300 hover:border-red-300 hover:bg-red-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 dark:border-neutral-800 dark:hover:border-red-900 dark:hover:bg-red-950/40"
+            class="group mt-4 flex w-full cursor-pointer items-center gap-4 rounded-2xl border border-neutral-200 px-5 py-4 text-left transition duration-300 hover:border-brand hover:bg-neutral-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 dark:border-neutral-800 dark:hover:border-brand dark:hover:bg-neutral-900"
         >
-            <span class="flex size-10 items-center justify-center rounded-xl bg-red-50 text-red-600 dark:bg-red-950 dark:text-red-400">
+            <span class="flex size-10 items-center justify-center rounded-xl bg-neutral-100 text-brand dark:bg-brand dark:text-white">
                 <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="M10 5H6a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h4" />
                     <path d="M14 8l4 4-4 4M18 12H9" />

@@ -3,10 +3,9 @@ withDefaults(
     defineProps<{
         title: string;
         subtitle: string;
-        headline?: string;
         points?: string[];
     }>(),
-    { headline: "", points: () => [] },
+    { points: () => [] },
 );
 </script>
 
@@ -41,13 +40,7 @@ withDefaults(
             </svg>
 
             <div class="relative mt-auto">
-                <p
-                    v-if="headline"
-                    class="max-w-[12ch] text-balance text-5xl font-extrabold leading-[1.05] tracking-tight"
-                >
-                    {{ headline }}
-                </p>
-                <ul class="mt-8 space-y-3 text-base text-neutral-200">
+                <ul class="space-y-3 text-base text-neutral-200">
                     <li
                         v-for="point in points"
                         :key="point"
@@ -55,7 +48,7 @@ withDefaults(
                     >
                         <svg
                             viewBox="0 0 24 24"
-                            class="size-5 shrink-0 text-[#F87171]"
+                            class="size-5 shrink-0 text-accent-dark"
                             fill="none"
                             stroke="currentColor"
                             stroke-width="2"

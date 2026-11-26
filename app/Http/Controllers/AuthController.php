@@ -27,8 +27,6 @@ class AuthController extends Controller
             return redirect('/');
         }
 
-        Inertia::flash('message2', __('msg.login.failed'));
-
         return back()
             ->withErrors(['email' => __('msg.login.invalid')])
             ->withInput();
@@ -48,6 +46,8 @@ class AuthController extends Controller
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
         ]);
+
+        Inertia::flash('message', __('msg.register.success'));
 
         return redirect('/login');
     }

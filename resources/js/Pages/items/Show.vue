@@ -1,6 +1,6 @@
 <template>
     <Head>
-        <title>{{ item.team }} {{ kitType(item.type) }}</title>
+        <title>{{ item.team }} {{ kitType(item.type) }} · {{ garment(item.image) }}</title>
         <meta name="description" :content="t('show.head_desc', { team: item.team, type: kitType(item.type), brand: item.brand })" />
     </Head>
 
@@ -17,7 +17,7 @@
                 class="photo"
                 :style="{ transformOrigin: zoomOrigin }"
                 :src="`/Teams/450/${item.team}/${item.image}`"
-                :alt="t('kit.alt', { team: item.team, type: kitType(item.type) })"
+                :alt="t('kit.alt', { team: item.team, type: kitType(item.type), garment: garment(item.image) })"
             />
             <span class="hint" :style="{ opacity: isZoomed ? 0 : 1 }">{{ t("show.hover_zoom") }}</span>
         </div>
@@ -25,7 +25,7 @@
         <form class="show-info" @submit.prevent="toCart">
             <div>
                 <h1>{{ item.team }} {{ kitType(item.type) }}</h1>
-                <p class="sub">{{ item.brand }}</p>
+                <p class="sub">{{ garment(item.image) }} · {{ item.brand }}</p>
             </div>
 
             <fieldset class="show-size">
@@ -41,11 +41,11 @@
                         {{ size }}
                     </button>
                 </div>
-                <p class="err" role="alert">{{ error }}</p>
+                <p class="err error-text" role="alert">{{ error }}</p>
             </fieldset>
 
             <div class="row">
-                <button ref="addButtonRef" type="submit" class="cta">{{ t("show.add") }}</button>
+                <button ref="addButtonRef" type="submit" class="btn-primary">{{ t("show.add") }}</button>
                 <Link
                     :method="isFavourite ? 'delete' : 'post'"
                     :href="isFavourite ? '/deleteFavourite' : '/toFavourites'"
@@ -79,7 +79,8 @@
         </form>
     </section>
 
-    <Teleport to="body">
+    <!-- client only: a teleport rendered during SSR breaks hydration -->
+    <Teleport v-if="isMounted" to="body">
         <div class="show-scrim" :class="{ open: isDrawerOpen }" aria-hidden="true" @click="closeDrawer"></div>
         <aside class="show-drawer" :class="{ open: isDrawerOpen }" role="dialog" aria-modal="true" :aria-label="t('show.cart_label')">
             <header>
@@ -89,33 +90,29 @@
 
             <div class="lines">
                 <TransitionGroup name="line">
-                    <div v-for="line in cartLines" :key="line.id" class="line-wrap">
-                        <div class="line-clip">
-                            <div class="line">
-                                <img
-                                    class="photo"
-                                    :src="`/Teams/150/${line.team}/${line.image}`"
-                                    :alt="`${line.team} ${kitType(line.type)}`"
-                                />
-                                <div>
-                                    <b>{{ line.team }}</b>
-                                    <span>{{ t("show.line_meta", { type: kitType(line.type), brand: line.brand, size: line.size }) }}</span>
-                                </div>
-                                <button type="button" :aria-label="t('show.remove_label', { team: line.team, type: kitType(line.type) })" @click="removeLine(line.id)">
-                                    {{ t("show.remove") }}
-                                </button>
-                            </div>
+                    <div v-for="line in cartLines" :key="line.id" class="line">
+                        <img
+                            class="photo"
+                            :src="`/Teams/150/${line.team}/${line.image}`"
+                            :alt="t('kit.alt', { team: line.team, type: kitType(line.type), garment: garment(line.image) })"
+                        />
+                        <div>
+                            <b>{{ line.team }}</b>
+                            <span>{{ garment(line.image) }} · {{ t("show.line_meta", { type: kitType(line.type), brand: line.brand, size: line.size }) }}</span>
                         </div>
+                        <button type="button" :aria-label="t('show.remove_label', { team: line.team, type: kitType(line.type) })" @click="removeLine(line.id)">
+                            {{ t("show.remove") }}
+                        </button>
                     </div>
                 </TransitionGroup>
                 <p v-if="!cartLines.length" class="empty">{{ t("show.empty") }}</p>
             </div>
 
             <footer>
-                <button type="button" class="cta" :disabled="!cartLines.length" @click="router.get('/cart')">
+                <button type="button" class="btn-primary" :disabled="!cartLines.length" @click="router.get('/cart')">
                     {{ t("show.to_cart") }}
                 </button>
-                <button type="button" class="ghost" @click="closeDrawer">{{ t("show.continue") }}</button>
+                <button type="button" class="btn-secondary" @click="closeDrawer">{{ t("show.continue") }}</button>
             </footer>
         </aside>
     </Teleport>
@@ -124,13 +121,13 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from "vue";
 import { Head, Link, router } from "@inertiajs/vue3";
-import { readCartLines, writeCartLines } from "@/cart";
+import { createLineId, readCartLines, writeCartLines } from "@/cart";
 import type { CartLine, Favourite, Item } from "@/types";
 import { useTranslation } from "@/useTranslation";
 
 const props = defineProps<{ item: Item; isFavourites: Pick<Favourite, "item_id">[] }>();
 
-const { t, kitType } = useTranslation();
+const { t, kitType, garment } = useTranslation();
 
 const sizes = computed(() => (Array.isArray(props.item.size) ? props.item.size : []));
 const error = ref("");
@@ -172,6 +169,7 @@ function stopZoom() {
 /* cart drawer (cart lives in localStorage under "items") */
 const cartLines = ref<CartLine[]>([]);
 const isDrawerOpen = ref(false);
+const isMounted = ref(false);
 const addButtonRef = ref<HTMLButtonElement | null>(null);
 const closeButtonRef = ref<HTMLButtonElement | null>(null);
 
@@ -179,16 +177,22 @@ function readCart() {
     cartLines.value = readCartLines();
 }
 
+/** The drawer lives on <body>, so an inert app root keeps keyboard focus inside it. */
+function setPageInert(inert: boolean): void {
+    document.getElementById("app")?.toggleAttribute("inert", inert);
+    document.body.style.overflow = inert ? "hidden" : "";
+}
+
 function openDrawer() {
     readCart();
     isDrawerOpen.value = true;
-    document.body.style.overflow = "hidden";
+    setPageInert(true);
     nextTick(() => closeButtonRef.value?.focus());
 }
 
 function closeDrawer() {
     isDrawerOpen.value = false;
-    document.body.style.overflow = "";
+    setPageInert(false);
     addButtonRef.value?.focus();
 }
 
@@ -205,7 +209,7 @@ function toCart() {
     }
 
     const sendItemtoStorage: CartLine = {
-        id: crypto.randomUUID(),
+        id: createLineId(),
         item_id: props.item.id,
         image: props.item.image,
         team: props.item.team,
@@ -224,33 +228,25 @@ function onKeydown(event: KeyboardEvent): void {
     }
 }
 
-onMounted(() => window.addEventListener("keydown", onKeydown));
+onMounted(() => {
+    isMounted.value = true;
+    window.addEventListener("keydown", onKeydown);
+});
 onBeforeUnmount(() => {
     window.removeEventListener("keydown", onKeydown);
-    document.body.style.overflow = "";
+    setPageInert(false);
 });
 </script>
 
 <style scoped>
 .show,
 .show-drawer {
-    --surface: #f5f5f4;
-    --line: #e5e5e5;
     --ease: cubic-bezier(0.16, 1, 0.3, 1);
 }
-:global(html.dark) .show,
-:global(html.dark) .show-drawer {
-    --surface: #171717;
-    --line: #262626;
-}
 
-/* product photos have opaque white backgrounds: multiply melts them into light surfaces, dark mode keeps a clean photo plate */
 .photo {
-    mix-blend-mode: multiply;
-}
-:global(html.dark) .photo {
-    mix-blend-mode: normal;
-    border-radius: 1.25rem;
+    mix-blend-mode: var(--photo-blend);
+    border-radius: var(--photo-radius);
 }
 
 .show {
@@ -265,7 +261,7 @@ onBeforeUnmount(() => {
     position: relative;
     aspect-ratio: 1;
     border-radius: 2rem;
-    background: var(--surface);
+    background: var(--page-surface);
     overflow: hidden;
     cursor: zoom-in;
     display: grid;
@@ -284,15 +280,23 @@ onBeforeUnmount(() => {
     position: absolute;
     left: 1rem;
     bottom: 1rem;
-    font-size: 0.8rem;
+    font-size: 0.9rem;
     font-weight: 700;
     color: var(--page-muted);
     background: var(--page-bg);
     padding: 0.35rem 0.8rem;
     border-radius: 999px;
-    border: 1px solid var(--line);
+    border: 1px solid var(--page-line);
     transition: opacity 0.2s;
     pointer-events: none;
+}
+@media (hover: none) {
+    .hint {
+        display: none;
+    }
+    .show-main {
+        cursor: default;
+    }
 }
 .show-info {
     display: grid;
@@ -301,7 +305,7 @@ onBeforeUnmount(() => {
     top: 1rem;
 }
 .show-info h1 {
-    font-size: clamp(2rem, 3.4vw, 3rem);
+    font-size: clamp(2.25rem, 3.4vw, 3.375rem);
     line-height: 1.02;
     letter-spacing: -0.035em;
     font-weight: 800;
@@ -319,7 +323,7 @@ onBeforeUnmount(() => {
     min-width: 0;
 }
 .show-size legend {
-    font-size: 0.85rem;
+    font-size: 0.956rem;
     font-weight: 700;
     margin-bottom: 0.6rem;
     padding: 0;
@@ -346,50 +350,24 @@ onBeforeUnmount(() => {
     background: var(--page-ink);
     color: var(--page-bg);
 }
-.err {
+:where(.err) {
     color: var(--color-brand-strong);
-    font-size: 0.875rem;
+    font-size: 0.984rem;
     font-weight: 600;
     min-height: 1.4em;
-}
-:global(html.dark) .err {
-    color: #f87171;
+    margin-top: 0.875rem;
 }
 .row {
     display: grid;
     grid-template-columns: 1fr auto;
     gap: 0.6rem;
 }
-.cta {
-    height: 3.5rem;
-    border-radius: 0.9rem;
-    background: var(--color-brand);
-    color: #fff;
-    font-weight: 800;
-    font-size: 1rem;
-    padding: 0 1.75rem;
-    cursor: pointer;
-    box-shadow: 0 10px 24px -10px rgba(220, 38, 38, 0.7);
-    transition: background 0.2s, transform 0.2s var(--ease);
-}
-.cta:hover {
-    background: var(--color-brand-strong);
-    transform: translateY(-1px);
-}
-.cta:active {
-    transform: translateY(1px);
-}
-.cta:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: none;
-}
 .heart {
     width: 3.5rem;
     height: 3.5rem;
     display: grid;
     place-items: center;
-    border: 1.5px solid var(--line);
+    border: 1.5px solid var(--page-line);
     border-radius: 0.9rem;
     cursor: pointer;
 }
@@ -408,8 +386,8 @@ onBeforeUnmount(() => {
     transform: scale(1.15);
 }
 details {
-    border-top: 1px solid var(--line);
-    border-bottom: 1px solid var(--line);
+    border-top: 1px solid var(--page-line);
+    border-bottom: 1px solid var(--page-line);
     padding: 0.9rem 0;
 }
 summary {
@@ -425,49 +403,19 @@ summary::-webkit-details-marker {
 summary::after {
     content: "+";
     font-weight: 500;
-    font-size: 1.25rem;
+    font-size: 1.406rem;
     line-height: 1;
     transition: rotate 0.3s var(--ease);
 }
 details[open] summary::after {
     rotate: 45deg;
 }
-/* smooth height + staggered rows (needs ::details-content, Chromium/Safari; others just toggle instantly) */
-details {
-    interpolate-size: allow-keywords;
-}
-details::details-content {
-    block-size: 0;
-    overflow: clip;
-    transition: block-size 0.5s var(--ease), content-visibility 0.5s allow-discrete;
-}
-details[open]::details-content {
-    block-size: auto;
-}
-dt,
-dd {
-    opacity: 0;
-    translate: 0 -6px;
-    filter: blur(3px);
-    transition: opacity 0.25s, translate 0.25s, filter 0.25s;
-}
-details[open] dt,
-details[open] dd {
-    opacity: 1;
-    translate: 0 0;
-    filter: none;
-    transition: opacity 0.5s var(--ease), translate 0.5s var(--ease), filter 0.5s var(--ease);
-}
-details[open] dt:nth-of-type(1), details[open] dd:nth-of-type(1) { transition-delay: 0.08s; }
-details[open] dt:nth-of-type(2), details[open] dd:nth-of-type(2) { transition-delay: 0.14s; }
-details[open] dt:nth-of-type(3), details[open] dd:nth-of-type(3) { transition-delay: 0.2s; }
-details[open] dt:nth-of-type(4), details[open] dd:nth-of-type(4) { transition-delay: 0.26s; }
 dl {
     display: grid;
     grid-template-columns: auto 1fr;
     gap: 0.35rem 1.5rem;
     margin-top: 0.6rem;
-    font-size: 0.92rem;
+    font-size: 1.035rem;
 }
 dt {
     color: var(--page-muted);
@@ -502,7 +450,7 @@ dd {
     width: min(420px, 100%);
     background: var(--page-bg);
     color: var(--page-ink);
-    border-left: 1px solid var(--line);
+    border-left: 1px solid var(--page-line);
     translate: 100% 0;
     visibility: hidden;
     transition: translate 0.55s var(--ease), visibility 0s 0.55s;
@@ -522,27 +470,20 @@ dd {
     justify-content: space-between;
     align-items: center;
     padding: 1.25rem 1.5rem;
-    border-bottom: 1px solid var(--line);
+    border-bottom: 1px solid var(--page-line);
     font-weight: 800;
-    font-size: 1.15rem;
+    font-size: 1.294rem;
 }
 .show-drawer header button {
     font: inherit;
     cursor: pointer;
 }
 .lines {
+    position: relative;
     padding: 1.25rem 1.5rem;
     display: grid;
     align-content: start;
     overflow: auto;
-}
-.line-wrap {
-    display: grid;
-    grid-template-rows: 1fr;
-}
-.line-clip {
-    min-height: 0;
-    overflow: hidden;
 }
 .line {
     position: relative;
@@ -553,39 +494,24 @@ dd {
     padding: 0.75rem;
     margin-bottom: 1rem;
     border-radius: 1rem;
-    background: var(--surface);
+    background: var(--page-surface);
     overflow: hidden;
 }
 
-/* ADD: the card is revealed by a left-to-right wipe */
-.line-enter-active {
-    transition: grid-template-rows 0.55s var(--ease) 0.3s;
+.line-enter-active,
+.line-leave-active,
+.line-move {
+    transition: transform 0.35s var(--ease), opacity 0.25s;
 }
-.line-enter-active .line {
-    transition: clip-path 0.7s var(--ease) 0.3s, opacity 0.5s 0.3s;
-}
-.line-enter-from {
-    grid-template-rows: 0fr;
-}
-.line-enter-from .line {
-    clip-path: inset(0 100% 0 0 round 1rem);
-    opacity: 0;
-}
-
-/* REMOVE: the card drifts out, blurs away and the list closes the gap */
-.line-leave-active {
-    transition: grid-template-rows 0.5s var(--ease) 0.12s;
-}
-.line-leave-active .line {
-    transition: translate 0.4s var(--ease), opacity 0.3s, filter 0.3s;
-}
+.line-enter-from,
 .line-leave-to {
-    grid-template-rows: 0fr;
-}
-.line-leave-to .line {
-    translate: 36px 0;
     opacity: 0;
-    filter: blur(6px);
+    transform: translateX(2rem);
+}
+.line-leave-active {
+    position: absolute;
+    left: 1.5rem;
+    right: 1.5rem;
 }
 .line img {
     width: 84px;
@@ -597,12 +523,13 @@ dd {
 }
 .line span {
     color: var(--page-muted);
-    font-size: 0.85rem;
+    font-size: 0.956rem;
 }
 .line button {
+    min-height: 2.75rem;
     color: var(--page-muted);
     font-weight: 700;
-    font-size: 0.8rem;
+    font-size: 0.9rem;
     text-decoration: underline;
     text-underline-offset: 3px;
     cursor: pointer;
@@ -614,16 +541,9 @@ dd {
 }
 .show-drawer footer {
     padding: 1.25rem 1.5rem;
-    border-top: 1px solid var(--line);
+    border-top: 1px solid var(--page-line);
     display: grid;
     gap: 0.6rem;
-}
-.ghost {
-    height: 3rem;
-    border-radius: 0.9rem;
-    border: 1.5px solid var(--line);
-    font-weight: 700;
-    cursor: pointer;
 }
 
 @media (max-width: 960px) {
@@ -640,13 +560,8 @@ dd {
     .show-scrim,
     .line-enter-active,
     .line-leave-active,
-    .line-enter-active .line,
-    .line-leave-active .line,
-    details::details-content,
-    dt,
-    dd,
+    .line-move,
     .sizes button,
-    .cta,
     .heart svg {
         transition-duration: 0.01ms !important;
         animation: none !important;

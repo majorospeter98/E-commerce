@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link, usePage } from "@inertiajs/vue3";
-import { computed, h, onBeforeUnmount, onMounted, reactive, ref, useId, watch } from "vue";
+import { computed, h, onBeforeUnmount, onMounted, ref, useId, watch } from "vue";
 import type { FunctionalComponent } from "vue";
 import { useTranslation } from "@/useTranslation";
 import { useTheme } from "../../useTheme";
@@ -186,15 +186,10 @@ function mixHex(a: string, b: string, t: number): string {
 /* --------------------------------------------------------------- icons --- */
 const ICONS: Record<string, string> = {
     chevL: '<path d="M14.5 5.5 8 12l6.5 6.5" />',
-    copy: '<path d="M13.5 4.5H7A2.5 2.5 0 0 0 4.5 7v10A2.5 2.5 0 0 0 7 19.5h10a2.5 2.5 0 0 0 2.5-2.5v-6.5" /><circle cx="18.5" cy="5.5" r="2.3" />',
     squiggle: '<path d="M3.5 15c1.8-3.2 3.6-3.2 5.4 0s3.6 3.2 5.4 0 3.6-3.2 5.4 0" />',
-    doc: '<path d="M14 3.5H7.5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V8z" /><path d="M14 3.5V8h4.5M8.8 12.5h6.4M8.8 16h4.2" />',
-    globe: '<circle cx="12" cy="12" r="8.5" /><path d="M3.5 12h17M12 3.5c2.5 2.6 3.6 5.4 3.6 8.5s-1.1 5.9-3.6 8.5c-2.5-2.6-3.6-5.4-3.6-8.5S9.5 6.1 12 3.5z" />',
-    link: '<path d="M10.5 13.5a3.5 3.5 0 0 0 5 0l3-3a3.5 3.5 0 0 0-5-5l-1 1M13.5 10.5a3.5 3.5 0 0 0-5 0l-3 3a3.5 3.5 0 0 0 5 5l1-1" />',
-    user: '<circle cx="12" cy="8.5" r="3.6" /><path d="M4.8 20c.9-3.6 3.7-5.4 7.2-5.4s6.3 1.8 7.2 5.4" />',
 };
 
-/* Small functional components: an icon and a link that picks Inertia <Link> for internal paths. */
+/* Small functional icon component. */
 const Icon: FunctionalComponent<{ name: string }> = (props) =>
     h("svg", {
         viewBox: "0 0 24 24",
@@ -209,42 +204,10 @@ const Icon: FunctionalComponent<{ name: string }> = (props) =>
     });
 Icon.props = ["name"];
 
-const A: FunctionalComponent<{ href?: string; label?: string }> = (props, { slots }) => {
-    const href = props.href;
-    const common = { title: props.label, "aria-label": props.label };
-    if (href && href.startsWith("/")) {
-        return h(Link, { href, ...common }, slots);
-    }
-    const external = /^https?:/.test(href || "");
-    return h(
-        "a",
-        {
-            href: href || "#",
-            ...common,
-            onClick: (e: MouseEvent) => {
-                if (!href || href === "#") e.preventDefault();
-            },
-            ...(external ? { target: "_blank", rel: "noopener noreferrer" } : {}),
-        },
-        slots.default?.(),
-    );
-};
-A.props = ["href", "label"];
-
 /* --------------------------------------------------------------- props --- */
 const props = withDefaults(
     defineProps<{
-        brand?: string;
-        name?: string;
-        logoHref?: string;
-        email?: string;
-        tagline?: string;
-        status?: { label: string; href?: string };
-        mark?: string;
-        timeZone?: string;
-        timeLabel?: string;
         copyright?: string;
-        credit?: string;
         sheet?: string;
         paper?: string;
         sheetInk?: string;
@@ -254,23 +217,13 @@ const props = withDefaults(
         fontSans?: string;
     }>(),
     {
-        brand: "football.",
-        name: "Majoros Péter",
-        logoHref: "/",
-        email: "",
-        tagline: "",
-        status: () => ({ label: "", href: "/items" }),
-        mark: "",
-        timeZone: "Europe/Budapest",
-        timeLabel: "BUD",
         copyright: "© 2026 Majoros Péter",
-        credit: "",
         sheet: "#DC2626",
         paper: "#f3f3f1",
         sheetInk: "#ffffff",
         paperInk: "",
         seed: 7,
-        height: "52svh",
+        height: "44svh",
         fontSans: '"Barlow Condensed", "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif',
     },
 );
@@ -291,9 +244,7 @@ const stage = ref(0);
 const hit = ref(false);
 const visible = ref(false);
 const pin = ref<"idle" | "lift" | "stab">("idle");
-const toast = ref("");
 const grain = ref("");
-const clock = reactive({ h: "--", m: "--" });
 
 const s: TearState = {
     W: 0,
@@ -389,7 +340,6 @@ let ro: ResizeObserver | null = null;
 let io: IntersectionObserver | null = null;
 let mq: MediaQueryList | null = null;
 let onMq: (() => void) | null = null;
-let clockId = 0;
 
 onMounted(() => {
     // reduced motion
@@ -440,30 +390,12 @@ onMounted(() => {
         g.putImageData(img, 0, 0);
         grain.value = c.toDataURL();
     }
-
-    // clock
-    if (props.timeZone) {
-        let f: Intl.DateTimeFormat;
-        try {
-            f = new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZone: props.timeZone });
-        } catch {
-            f = new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
-        }
-        const tick = () => {
-            const [hh = "--", mm = "--"] = f.format(new Date()).split(":");
-            clock.h = hh;
-            clock.m = mm;
-        };
-        tick();
-        clockId = window.setInterval(tick, 10000);
-    }
 });
 
 onBeforeUnmount(() => {
     ro?.disconnect();
     io?.disconnect();
     if (mq && onMq) mq.removeEventListener("change", onMq);
-    clearInterval(clockId);
     cancelAnimationFrame(s.raf);
     s.raf = 0;
     timers.forEach((id) => clearTimeout(id));
@@ -559,22 +491,6 @@ function repin() {
     }, 1720);
 }
 
-function flash(msg: string): void {
-    toast.value = msg;
-    later(() => (toast.value = ""), 1600);
-}
-
-function copyEmail() {
-    if (navigator.clipboard?.writeText) {
-        navigator.clipboard.writeText(props.email).then(
-            () => flash(t("footer.email_copied")),
-            () => flash(props.email),
-        );
-    } else {
-        flash(props.email);
-    }
-}
-
 function toTop() {
     window.scrollTo({ top: 0, behavior: still.value ? "auto" : "smooth" });
 }
@@ -584,7 +500,7 @@ const HEX = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
 const pinBase = computed(() => (HEX.test(props.sheet) ? props.sheet : "#DC2626"));
 const { isDark } = useTheme();
 const paperColor = computed(() => (isDark.value ? "#171717" : props.paper));
-const paperInkColor = computed(() => (isDark.value ? "#f87171" : props.paperInk));
+const paperInkColor = computed(() => (isDark.value ? "#38bdf8" : props.paperInk));
 const flapBase = computed(() =>
     mixHex(HEX.test(paperColor.value) ? paperColor.value : "#f3f3f1", "#ffffff", isDark.value ? 0.1 : 0.35),
 );
@@ -617,24 +533,12 @@ const rootClass = computed(() =>
         .join(" "),
 );
 
-const sealD = (() => {
-    let d = "";
-    for (let i = 0; i <= 24; i++) {
-        const a = (i / 24) * Math.PI * 2 - Math.PI / 2;
-        const r = i % 2 ? 8.6 : 10;
-        d += (i ? "L" : "M") + (12 + Math.cos(a) * r).toFixed(2) + " " + (12 + Math.sin(a) * r).toFixed(2);
-    }
-    return d + "Z";
-})();
-
 const page = usePage();
 const isLoggedIn = computed(() => Boolean(page.props.auth));
 
-const mailto = computed(() => (props.email ? "mailto:" + props.email : "/items"));
 interface FooterColumn {
     title: string;
     links: { label: string; href: string }[];
-    cta?: { label: string; href: string };
 }
 
 const { t } = useTranslation();
@@ -665,7 +569,6 @@ const cols = computed((): FooterColumn[] => {
         },
     ];
 });
-const idx = (i: number) => ({ "--i": i });
 </script>
 
 <template>
@@ -730,74 +633,20 @@ const idx = (i: number) => ({ "--i": i });
 
         <div class="tpf-inner">
         <!-- on the sheet -->
-        <div class="tpf-z tpf-top">
-            <div class="tpf-row tpf-h" :style="idx(0)">
-                <button type="button" class="tpf-ib tpf-up" :aria-label="t('footer.top')" :title="t('footer.top')" @click="toTop">
-                    <Icon name="chevL" />
-                </button>
-            </div>
-            <div class="tpf-h" :style="{ ...idx(2), position: 'relative' }">
-                <template v-if="email">
-                    <button type="button" class="tpf-mail" :aria-label="t('footer.copy_email') + ' ' + email" :title="t('footer.copy_email')" @click="copyEmail">
-                        <span>{{ email }}</span>
-                        <Icon name="copy" />
-                    </button>
-                    <span :class="'tpf-toast' + (toast ? ' on' : '')" role="status" aria-live="polite">{{ toast }}</span>
-                </template>
-            </div>
-        </div>
+        <button type="button" class="tpf-z tpf-ib tpf-up" :aria-label="t('footer.top')" :title="t('footer.top')" @click="toTop">
+            <Icon name="chevL" />
+        </button>
 
-        <p v-if="tagline" class="tpf-z tpf-tag tpf-h" :style="idx(3)">{{ tagline }}</p>
-
-        <span v-if="mark" class="tpf-z tpf-flank tpf-h" :style="{ ...idx(4), left: '24%' }">{{ mark }}</span>
-        <span
-            v-if="timeZone"
-            class="tpf-z tpf-flank tpf-h"
-            :style="{ ...idx(4), left: '76%' }"
-            :title="t('footer.local_time') + ' · ' + timeZone"
-        >
-            <span class="tpf-clock">{{ timeLabel }} {{ clock.h }}<i aria-hidden="true">:</i>{{ clock.m }}</span>
-        </span>
-
-        <template v-if="status">
-            <A :href="status.href ?? mailto" class="tpf-z tpf-status tpf-h" :style="idx(5)">
-                <i class="tpf-live" aria-hidden="true" />
-                <span>{{ status.label || t('footer.status') }}</span>
-            </A>
-            <span class="tpf-z tpf-badge" aria-hidden="true">
-                <span class="tpf-h" :style="{ ...idx(6), display: 'block', width: '100%', height: '100%' }">
-                    <svg viewBox="0 0 24 24" class="tpf-seal" aria-hidden="true">
-                        <path :d="sealD" fill="currentColor" stroke-linejoin="round" stroke="currentColor" stroke-width="2.2" />
-                        <path
-                            d="m8.3 12.2 2.5 2.5 5-5.2"
-                            fill="none"
-                            stroke="var(--tpf-sheet)"
-                            stroke-width="2.2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                        />
-                    </svg>
-                </span>
-            </span>
-        </template>
-
-        <nav
-            v-for="(c, i) in cols"
-            :key="c.title"
-            :class="'tpf-z tpf-col tpf-h ' + (i ? 'r' : 'l')"
-            :style="idx(6 + i)"
-            :aria-label="c.title"
-        >
+        <nav v-for="(c, i) in cols" :key="c.title" :class="'tpf-z tpf-col ' + (i ? 'r' : 'l')" :aria-label="c.title">
             <p class="tpf-title">
                 {{ c.title }}
                 <Icon name="squiggle" />
             </p>
             <ul>
                 <li v-for="l in c.links" :key="l.label">
-                    <A :href="l.href">{{ l.label }}</A>
+                    <Link :href="l.href">{{ l.label }}</Link>
                 </li>
             </ul>
-            <A v-if="c.cta" :href="c.cta.href" class="tpf-big">{{ c.cta.label }}</A>
         </nav>
 
         <!-- the pin -->
@@ -868,68 +717,37 @@ const idx = (i: number) => ({ "--i": i });
 
 
         <div class="tpf-z tpf-foot tpf-ink">
-            <span class="tpf-p" :style="idx(3)">{{ copyright }}</span>
-            <span v-if="credit" class="tpf-credit tpf-p" :style="idx(4)">{{ credit }}</span>
+            <span>{{ copyright }}</span>
         </div>
         </div>
     </footer>
 </template>
 
 <style>
-.tpf{position:relative;overflow:hidden;container-type:size;min-height:520px;background:var(--tpf-sheet);color:var(--tpf-on-sheet);font-family:var(--tpf-sans);isolation:isolate;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;--ease:cubic-bezier(.22,1,.36,1);--u:1.4cqmin;--fs:max(16px,calc(2.6*var(--u)))}
-.tpf{width:100vw;margin-left:calc(50% - 50vw)}
-.tpf-inner{position:absolute;top:0;bottom:0;left:0;right:0;width:min(1300px,90%);margin:0 auto}
+.tpf{position:relative;overflow:hidden;container-type:size;min-height:460px;background:var(--tpf-sheet);color:var(--tpf-on-sheet);font-family:var(--tpf-sans);font-weight:600;isolation:isolate;-webkit-font-smoothing:antialiased;--ease:cubic-bezier(.22,1,.36,1);--u:1.4cqmin;--fs:max(19px,calc(3.1*var(--u)))}
+.tpf-inner{position:absolute;inset:0;width:min(1300px,90%);margin:0 auto}
 .tpf *,.tpf *::before,.tpf *::after{box-sizing:border-box}
 :where(.tpf) a{color:inherit;text-decoration:none}
 :where(.tpf) button{font:inherit;color:inherit;background:none;border:0;padding:0;margin:0;cursor:pointer}
-:where(.tpf) :focus-visible{outline:1.5px solid currentColor;outline-offset:4px;border-radius:4px}
+:where(.tpf) :focus-visible{outline:2px solid currentColor;outline-offset:4px;border-radius:4px}
 .tpf-stage{position:absolute;left:0;top:0;max-width:none;display:block;pointer-events:none;z-index:0}
 .tpf.is-hit .tpf-sheet-g{animation:tpf-hit .32s cubic-bezier(.3,.7,.4,1)}
 .tpf-sheet{fill:var(--tpf-sheet)}.tpf-paper{fill:var(--tpf-paper)}.tpf-rim{fill:var(--tpf-rim)}
 .tpf-ico{width:1.35em;height:1.35em;display:block;max-width:none;flex:none}
-.tpf-seal{width:100%;height:100%;display:block;max-width:none}
 .tpf-stop{transition:stop-color .7s ease}
 .tpf-z{position:absolute;z-index:2}
 .tpf-ink{color:var(--tpf-on-paper)}
-.tpf-h{transition:opacity .7s var(--ease),translate .8s var(--ease),filter .7s var(--ease);transition-delay:calc(var(--i,0)*45ms)}
-.tpf:not(.s1) .tpf-h{opacity:0;translate:0 10px;filter:blur(6px)}
-.tpf-p{transition:opacity .8s var(--ease),translate .9s var(--ease),filter .8s var(--ease);transition-delay:calc(480ms + var(--i,0)*70ms)}
-.tpf:not(.s3) .tpf-p{opacity:0;translate:0 18px;filter:blur(8px);transition-delay:0s}
-.tpf-top{left:0;right:0;top:10.8%;transform:translateY(-50%);display:flex;align-items:center;justify-content:space-between;padding:0 11%;font-size:max(15px,calc(2.6*var(--u)))}
-.tpf-row{display:flex;align-items:center;gap:.55em}
-.tpf-ib{display:grid;place-items:center;width:1.9em;height:1.9em;margin:-.3em;border-radius:50%;transition:transform .35s var(--ease),background-color .25s}
-.tpf-ib:hover{transform:translateY(-2px);background:color-mix(in srgb,currentColor 14%,transparent)}
-.tpf-ib:active{transform:scale(.9)}
+.tpf-ib{display:grid;place-items:center;width:44px;height:44px;border-radius:50%;transition:background-color .2s}
+.tpf-ib:hover{background:color-mix(in srgb,currentColor 14%,transparent)}
+.tpf-up{right:0;top:6%}
 .tpf-up .tpf-ico{transform:rotate(90deg)}
-.tpf-logo{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:grid;place-items:center}
-.tpf-mono{display:grid;place-items:center;width:2.4em;height:2.4em;border:.12em solid currentColor;border-radius:50%;font-size:1em;font-weight:700;letter-spacing:-.04em;transition:transform .5s var(--ease)}
-.tpf-logo:hover .tpf-mono{transform:rotate(-8deg) scale(1.08)}
-.tpf-mail{display:flex;align-items:center;gap:.6em;font-size:var(--fs);letter-spacing:.01em;padding:.35em .2em;transition:transform .35s var(--ease)}
-.tpf-mail:hover{transform:translateY(-2px)}
-.tpf-mail span{background:linear-gradient(currentColor,currentColor) 0 100%/0 1px no-repeat;transition:background-size .4s var(--ease)}
-.tpf-mail:hover span{background-size:100% 1px}
-.tpf-mail .tpf-ico{width:1.5em;height:1.5em}
-.tpf-toast{position:absolute;top:calc(100% + .5em);right:0;font-size:max(11px,calc(1.6*var(--u)));letter-spacing:.04em;white-space:nowrap;padding:.35em .8em;border-radius:99px;background:var(--tpf-on-sheet);color:var(--tpf-sheet);opacity:0;transform:translateY(-4px);transition:opacity .25s,transform .35s var(--ease);pointer-events:none}
-.tpf-toast.on{opacity:1;transform:none}
-.tpf-tag{left:50%;top:16%;width:max-content;max-width:86%;transform:translateX(-50%);text-align:center;font-size:max(15px,calc(2.6*var(--u)));letter-spacing:-.01em}
-.tpf-flank{top:16.5%;transform:translate(-50%,-50%);font-size:var(--fs);letter-spacing:.04em;white-space:nowrap;text-transform:uppercase}
-.tpf-clock{font-variant-numeric:tabular-nums}.tpf-clock i{font-style:normal;animation:tpf-blink 2s steps(1) infinite}
-.tpf-status{left:50%;top:26%;transform:translate(-50%,-50%);display:flex;align-items:center;gap:.6em;font-size:max(14px,calc(2.25*var(--u)));white-space:nowrap;letter-spacing:.01em}
-.tpf-live{position:relative;width:.5em;height:.5em;border-radius:50%;background:currentColor}
-.tpf-live::after{content:'';position:absolute;inset:0;border-radius:50%;border:1.5px solid currentColor;animation:tpf-ping 2.2s var(--ease) infinite}
-.tpf a.tpf-status:hover span{text-decoration:underline;text-underline-offset:.2em}
-.tpf-badge{left:50%;top:31%;transform:translate(-50%,-50%);width:max(15px,calc(2.3*var(--u)));height:max(15px,calc(2.3*var(--u)))}
-.tpf-col{top:22%;display:grid;gap:max(5px,calc(.9*var(--u)));font-size:var(--fs)}
-.tpf-col.l{left:14%;justify-items:start}.tpf-col.r{right:14%;justify-items:end;text-align:right}
-.tpf-col .tpf-title{all:unset;display:flex;align-items:center;gap:1em;margin-bottom:max(4px,calc(.6*var(--u)))}
+.tpf-col{top:7%;display:grid;gap:8px;font-size:var(--fs)}
+.tpf-col.l{left:0;justify-items:start}.tpf-col.r{top:calc(6% + 56px);right:0;justify-items:end;text-align:right}
+.tpf-col .tpf-title{display:flex;align-items:center;gap:1em;margin:0}
 .tpf-col.r .tpf-title{flex-direction:row-reverse}
-.tpf-col .tpf-title .tpf-ico{width:1.1em;height:1.1em}
-.tpf-col ul{all:unset;display:grid;gap:max(4px,calc(.7*var(--u)));justify-items:inherit}
-.tpf-col li{list-style:none}
-.tpf-col li a{display:inline-block;transition:transform .35s var(--ease),opacity .25s}
-.tpf-col.l li a:hover{transform:translateX(4px)}.tpf-col.r li a:hover{transform:translateX(-4px)}
-.tpf-big{margin-top:max(6px,calc(1*var(--u)));font-size:max(26px,calc(4.6*var(--u)));letter-spacing:-.025em;line-height:1;text-decoration:underline;text-decoration-thickness:max(1.5px,.04em);text-underline-offset:.12em;transition:text-underline-offset .35s var(--ease)}
-.tpf .tpf-big:hover{text-underline-offset:.22em}
+.tpf-col ul{list-style:none;margin:0;padding:0;display:grid;gap:0;justify-items:inherit}
+.tpf-col li a{display:inline-flex;align-items:center;min-height:44px;text-underline-offset:.25em}
+.tpf-col li a:hover{text-decoration:underline}
 .tpf-pin{position:absolute;z-index:3;left:50%;top:68%;width:max(46px,calc(9*var(--u)));height:max(92px,calc(18*var(--u)));transform:translate(-50%,-100%);cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .tpf-pin:focus-visible{outline-offset:6px}
 .tpf-tilt{position:absolute;inset:0;transform-origin:50% 100%;transform:rotate(calc(5deg + var(--tilt,0deg)));transition:transform .7s var(--ease)}
@@ -948,36 +766,11 @@ const idx = (i: number) => ({ "--i": i });
 .tpf-pin[data-pin=lift] .tpf-body{transform:translateY(-22%) rotate(-10deg);transition-duration:.3s}
 .tpf-pin[data-pin=lift] .tpf-shadow{transform:rotate(16deg) translateX(-26%) scale(1.25);opacity:.55}
 .tpf-pin[data-pin=stab] .tpf-body{animation:tpf-stab .42s cubic-bezier(.55,0,.8,.2) both}
-.tpf-brand{left:50%;top:72%;width:max-content;transform:translateX(-50%);display:grid;justify-items:stretch}
-.tpf-brand-top{display:flex;align-items:center;justify-content:space-between;gap:1em;padding:0 .2em 0 .5em}
-.tpf-eye{font-size:max(15px,calc(2.6*var(--u)));letter-spacing:-.02em}
-.tpf-word{display:block;overflow:hidden;padding:0 .04em .14em;font-size:max(44px,min(calc(9.5*var(--u)),16cqw));font-weight:500;letter-spacing:-.055em;line-height:.98;white-space:nowrap}
-.tpf-word span{display:block;position:relative;transition:transform 1s var(--ease) .5s}
-.tpf-word span::after{content:'';position:absolute;left:.02em;right:.04em;bottom:-.02em;height:max(2px,.045em);background:currentColor;transform-origin:0 50%;transition:transform .9s var(--ease) 1.05s,height .3s var(--ease)}
-.tpf:not(.s3) .tpf-word span{transform:translateY(125%);transition-delay:0s}
-.tpf:not(.s3) .tpf-word span::after{transform:scaleX(0);transition-delay:0s}
-.tpf-word:hover span::after{height:max(4px,.075em)}
-.tpf-side{top:76%;display:grid;justify-items:center;gap:max(10px,calc(1.9*var(--u)));font-size:max(13px,calc(2.1*var(--u)));transform:translateX(-50%)}
-.tpf-side .tpf-ico{width:1.35em;height:1.35em;transition:transform .35s var(--ease)}
-.tpf-side:hover .tpf-ico{transform:translateY(-2px) rotate(-8deg)}
-.tpf-side span{background:linear-gradient(currentColor,currentColor) 0 100%/0 1px no-repeat;transition:background-size .4s var(--ease)}
-.tpf-side:hover span{background-size:100% 1px}
-.tpf-foot{left:0;right:0;bottom:4%;display:flex;align-items:center;justify-content:space-between;gap:1.5em;padding:0 15%;font-size:max(15px,calc(2.3*var(--u)))}
-.tpf-credit{position:absolute;left:50%;transform:translateX(-50%);font-size:max(10px,calc(1.4*var(--u)));letter-spacing:.08em;text-transform:uppercase;opacity:.62;white-space:nowrap}
-.tpf-handle:hover{text-decoration:underline;text-underline-offset:.2em}
-@container (max-width: 620px){
-.tpf-top{padding:0 7%}.tpf-flank,.tpf-mail span{display:none}
-.tpf-tag{top:17%}
-.tpf-status{top:20%}.tpf-badge{top:24.5%}
-.tpf-col{top:29%}.tpf-col.l{left:7%}.tpf-col.r{right:7%}.tpf-col li:nth-child(n+5){display:none}
-.tpf-side{top:86%}.tpf-side.l{left:14%!important}.tpf-side.r{left:86%!important}
-.tpf-foot{padding:0 7%;bottom:3.5%}.tpf-credit{bottom:2.4em}
-}
+.tpf-foot span{background:var(--tpf-paper);border-radius:99px;padding:.1em .9em}
+.tpf-foot{left:0;right:0;bottom:4%;display:flex;justify-content:center;font-size:var(--fs)}
 @keyframes tpf-hit{0%{transform:translateY(0)}30%{transform:translateY(2px)}60%{transform:translateY(-.5px)}100%{transform:translateY(0)}}
 @keyframes tpf-drop{0%{transform:translateY(-62cqh) rotate(-28deg) scale(1.5);opacity:0}25%{opacity:1}80%{transform:translateY(0) rotate(3deg) scale(1)}90%{transform:scale(1.04,.95)}100%{transform:none;opacity:1}}
 @keyframes tpf-shade{0%{transform:rotate(16deg) translateX(-60%) scale(2.4);opacity:0}80%{transform:rotate(16deg);opacity:1}100%{transform:rotate(16deg);opacity:1}}
 @keyframes tpf-stab{0%{transform:translateY(-22%) rotate(-10deg)}70%{transform:translateY(1.5%) rotate(1deg)}100%{transform:none}}
-@keyframes tpf-blink{0%{opacity:1}50%{opacity:.25}}
-@keyframes tpf-ping{0%{transform:scale(1);opacity:.9}80%,100%{transform:scale(2.6);opacity:0}}
 @media (prefers-reduced-motion: reduce){.tpf *,.tpf *::before,.tpf *::after{animation:none!important;transition-duration:.01s!important;transition-delay:0s!important}}
 </style>

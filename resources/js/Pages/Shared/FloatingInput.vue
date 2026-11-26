@@ -33,6 +33,9 @@ const describedBy = computed(() => {
 
 <template>
     <div>
+        <label :for="id" class="mb-1.5 block text-sm font-semibold text-neutral-800 dark:text-neutral-200">
+            {{ label }}
+        </label>
         <div class="relative">
             <input
                 :id="id"
@@ -40,27 +43,20 @@ const describedBy = computed(() => {
                 :type="inputType"
                 :autocomplete="autocomplete"
                 v-model="model"
-                placeholder=" "
                 required
                 :minlength="minlength"
                 :aria-invalid="error ? 'true' : 'false'"
                 :aria-describedby="describedBy"
-                class="peer block h-14 w-full rounded-xl border bg-white px-4 pt-5 text-base text-neutral-900 outline-none dark:bg-neutral-950 dark:text-neutral-100 transition-[border-color,box-shadow] duration-200 placeholder:text-transparent focus:border-brand focus:ring-4 focus:ring-brand/15"
+                class="block h-13 w-full rounded-xl border bg-white px-4 text-base text-neutral-900 caret-brand outline-none transition-[border-color,box-shadow] duration-200 focus:border-brand focus:ring-4 focus:ring-brand/15 dark:bg-neutral-950 dark:text-neutral-100"
                 :class="[
-                    error ? 'border-brand-strong dark:border-red-400' : 'border-neutral-300 dark:border-neutral-600',
-                    isPasswordField ? 'pr-12' : '',
+                    error ? 'border-brand-strong dark:border-brand' : 'border-neutral-300 dark:border-neutral-600',
+                    isPasswordField ? 'pr-14' : '',
                 ]"
             />
-            <label
-                :for="id"
-                class="pointer-events-none absolute left-4 top-4 origin-left text-base text-neutral-600 dark:text-neutral-400 transition-transform duration-200 ease-out peer-focus:-translate-y-2.5 peer-focus:scale-75 peer-[:not(:placeholder-shown)]:-translate-y-2.5 peer-[:not(:placeholder-shown)]:scale-75 motion-reduce:transition-none"
-            >
-                {{ label }}
-            </label>
             <button
                 v-if="isPasswordField"
                 type="button"
-                class="absolute right-1.5 top-1.5 flex size-11 items-center justify-center rounded-lg text-neutral-600 transition-colors hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white focus-visible:outline-2 focus-visible:outline-brand"
+                class="absolute right-1.5 top-1 flex size-11 items-center justify-center rounded-lg text-neutral-600 transition-colors hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white focus-visible:outline-2 focus-visible:outline-brand"
                 :aria-label="
                     isPasswordVisible ? t('auth.hide_password') : t('auth.show_password')
                 "
@@ -89,7 +85,7 @@ const describedBy = computed(() => {
             v-if="error"
             :id="errorId"
             role="alert"
-            class="mt-2 text-sm text-brand-strong dark:text-red-400"
+            class="error-text mt-2 text-sm text-brand-strong"
         >
             {{ error }}
         </p>

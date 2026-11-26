@@ -4,7 +4,7 @@
         <meta name="description" :content="t('fav.head_desc')" />
     </Head>
 
-    <h1 class="text-5xl tracking-tight text-balance">{{ t("fav.heading") }}</h1>
+    <h1 class="page-title">{{ t("fav.heading") }}</h1>
 
     <KitGrid
         v-if="props.fav.length > 0"

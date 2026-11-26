@@ -1,21 +1,21 @@
 <template>
     <ul class="kits">
-        <li v-for="(kit, index) in kits" :key="kit.key" class="kit" :style="{ '--i': index }">
-            <a :href="kit.href" class="kit-link" @click.prevent="router.get(kit.href)">
+        <li v-for="(kit, index) in kits" :key="kit.key" class="kit">
+            <Link :href="kit.href" class="kit-link">
                 <span class="kit-stage">
                     <img
                         class="kit-img"
                         :src="`/Teams/450/${kit.team}/${kit.image}`"
-                        :alt="t('kit.alt', { team: kit.team, type: kitType(kit.type) })"
-                        loading="lazy"
+                        :alt="t('kit.alt', { team: kit.team, type: kitType(kit.type), garment: garment(kit.image) })"
+                        :loading="index < 4 ? 'eager' : 'lazy'"
                     />
                 </span>
                 <span class="kit-caption">
                     <span class="kit-team">{{ kit.team }}</span>
-                    <span class="kit-meta">{{ kitType(kit.type) }} · {{ kit.brand }}</span>
+                    <span class="kit-meta">{{ garment(kit.image) }} · {{ kitType(kit.type) }} · {{ kit.brand }}</span>
                     <span v-for="line in kit.details" :key="line" class="kit-meta">{{ line }}</span>
                 </span>
-            </a>
+            </Link>
             <button
                 v-if="removeLabel"
                 type="button"
@@ -32,7 +32,7 @@
 </template>
 
 <script setup lang="ts">
-import { router } from "@inertiajs/vue3";
+import { Link } from "@inertiajs/vue3";
 import type { Kit } from "@/types";
 import { useTranslation } from "@/useTranslation";
 
@@ -42,13 +42,13 @@ defineProps<{
     removeLabel?: (kit: Kit) => string;
 }>();
 const emit = defineEmits<{ remove: [kit: Kit] }>();
-const { t, kitType } = useTranslation();
+const { t, kitType, garment } = useTranslation();
 </script>
 
 <style scoped>
 .kits {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr));
     gap: 3rem 1.5rem;
 }
 .kit {
@@ -62,14 +62,14 @@ const { t, kitType } = useTranslation();
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 2.5rem;
-    height: 2.5rem;
+    width: 2.75rem;
+    height: 2.75rem;
     border-radius: 9999px;
     cursor: pointer;
-    color: #dc2626;
+    color: var(--color-brand);
     background: var(--page-bg);
     box-shadow: 0 2px 8px rgb(0 0 0 / 0.15);
-    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.3s, color 0.3s;
+    transition: background-color 0.2s, color 0.2s;
 }
 .kit-remove svg {
     width: 1.25rem;
@@ -77,90 +77,55 @@ const { t, kitType } = useTranslation();
 }
 .kit-remove:hover,
 .kit-remove:focus-visible {
-    transform: scale(1.1);
     color: #fff;
-    background: #dc2626;
+    background: var(--color-brand);
 }
 .kit-remove:focus-visible {
-    outline: 2px solid #dc2626;
+    outline: 2px solid var(--color-brand);
     outline-offset: 2px;
 }
 .kit-link {
     display: block;
     text-align: center;
-    outline-offset: 6px;
+    border-radius: 1rem;
+    outline-offset: 4px;
 }
 .kit-link:focus-visible {
-    outline: 2px solid #dc2626;
-    border-radius: 1rem;
+    outline: 2px solid var(--color-brand);
 }
 .kit-stage {
     display: block;
     aspect-ratio: 1;
+    overflow: hidden;
+    border-radius: 1.25rem;
+}
+/* a deliberate rounded plate instead of a hard white rectangle */
+:global(html.dark .kit-stage) {
+    background: #fff;
 }
 .kit-img {
     width: 100%;
     height: 100%;
     object-fit: contain;
-    transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), filter 0.6s, opacity 0.6s;
 }
 .kit-caption {
     display: block;
     margin-top: 0.75rem;
-    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.kit-link:hover .kit-caption,
-.kit-link:focus-visible .kit-caption {
-    transform: translateY(1.25rem);
-}
+/* hover and focus only underline the name: the photo stays still */
 .kit-team {
-    display: inline;
     font-weight: 800;
-    letter-spacing: -0.01em;
-    background: linear-gradient(#dc2626, #dc2626) left bottom / 0 2px no-repeat;
-    transition: background-size 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.kit-meta {
-    display: block;
-    font-size: 0.875rem;
-    color: var(--page-muted);
-}
-
-/* Focus: the hovered kit comes forward, the rest recede into soft blur */
-.kit-link:hover .kit-img,
-.kit-link:focus-visible .kit-img {
-    transform: scale(1.1);
-    filter: drop-shadow(0 22px 20px rgb(0 0 0 / 0.22));
+    font-size: 1.266rem;
+    text-decoration: underline 2px transparent;
+    text-underline-offset: 0.3em;
+    transition: text-decoration-color 0.2s;
 }
 .kit-link:hover .kit-team,
 .kit-link:focus-visible .kit-team {
-    background-size: 100% 2px;
+    text-decoration-color: var(--color-brand);
 }
-.kits:has(.kit-link:hover) .kit:not(:hover) .kit-img,
-.kits:has(.kit-link:focus-visible) .kit:not(:focus-within) .kit-img {
-    filter: grayscale(1) blur(2px);
-    opacity: 0.4;
-    transform: scale(0.94);
-}
-
-@media (prefers-reduced-motion: no-preference) {
-    .kit {
-        animation: rise 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
-        animation-delay: calc(var(--i) * 60ms);
-    }
-}
-@keyframes rise {
-    from {
-        opacity: 0;
-        transform: translateY(24px);
-        filter: blur(6px);
-    }
-}
-@media (prefers-reduced-motion: reduce) {
-    .kit-img,
-    .kit-caption,
-    .kit-team {
-        transition: none;
-    }
+.kit-meta {
+    display: block;
+    color: var(--page-muted);
 }
 </style>

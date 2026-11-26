@@ -6,8 +6,8 @@
             :content="t('cart.head_desc')"
         />
     </Head>
-    <section class="mx-auto w-full max-w-6xl px-4 pb-28 lg:pb-0">
-        <h1 class="text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
+    <section class="w-full pb-12">
+        <h1 class="page-title">
             {{ t("cart.heading") }}
             <span
                 v-if="items.length > 0"
@@ -19,7 +19,7 @@
 
         <form
             v-if="items.length > 0"
-            class="mt-8 grid items-start gap-8 lg:grid-cols-[1fr_360px]"
+            class="mt-8 flex flex-col gap-8 lg:grid lg:grid-cols-[1fr_360px] lg:items-start"
             @submit.prevent="itemsToDatabase"
         >
             <TransitionGroup tag="ul" name="cart-line" class="relative flex flex-col gap-4">
@@ -31,7 +31,7 @@
                     <div class="flex size-24 shrink-0 items-center justify-center rounded-2xl bg-neutral-100 dark:bg-neutral-800 sm:size-32">
                         <img
                             :src="`/Teams/150/${item.team}/${item.image}`"
-                            :alt="item.team"
+                            :alt="t('kit.alt', { team: item.team, type: kitType(item.type), garment: garment(item.image) })"
                             class="size-20 object-contain sm:size-28"
                         />
                     </div>
@@ -40,7 +40,7 @@
                         <div>
                             <h2 class="truncate text-lg font-semibold">{{ item.team }}</h2>
                             <p class="text-sm text-neutral-600 dark:text-neutral-400">
-                                {{ kitType(item.type) }} · {{ item.brand }} · {{ t("cart.size", { size: item.size }) }}
+                                {{ garment(item.image) }} · {{ kitType(item.type) }} · {{ item.brand }} · {{ t("cart.size", { size: item.size }) }}
                             </p>
                         </div>
 
@@ -51,7 +51,7 @@
                         >
                             <button
                                 type="button"
-                                class="flex size-9 cursor-pointer items-center justify-center rounded-full transition hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-neutral-900 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-neutral-800 dark:focus-visible:outline-neutral-300"
+                                class="flex size-11 cursor-pointer items-center justify-center rounded-full transition hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-neutral-900 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-neutral-800 dark:focus-visible:outline-neutral-300"
                                 :disabled="item.quantity <= 1"
                                 :aria-label="t('cart.decrease')"
                                 @click="changeQuantity(item.id, -1)"
@@ -61,7 +61,7 @@
                             <span class="min-w-8 text-center font-medium tabular-nums">{{ item.quantity }}</span>
                             <button
                                 type="button"
-                                class="flex size-9 cursor-pointer items-center justify-center rounded-full transition hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-neutral-900 dark:hover:bg-neutral-800 dark:focus-visible:outline-neutral-300"
+                                class="flex size-11 cursor-pointer items-center justify-center rounded-full transition hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-neutral-900 dark:hover:bg-neutral-800 dark:focus-visible:outline-neutral-300"
                                 :aria-label="t('cart.increase')"
                                 @click="changeQuantity(item.id, 1)"
                             >
@@ -72,7 +72,7 @@
 
                     <button
                         type="button"
-                        class="flex size-10 shrink-0 cursor-pointer items-center justify-center self-start rounded-full text-neutral-500 transition hover:bg-red-50 hover:text-red-600 focus-visible:outline-2 focus-visible:outline-red-600 dark:hover:bg-red-950 dark:hover:text-red-400"
+                        class="flex size-11 shrink-0 cursor-pointer items-center justify-center self-start rounded-full text-neutral-500 transition hover:bg-neutral-100 hover:text-brand focus-visible:outline-2 focus-visible:outline-red-600 dark:hover:bg-neutral-800 dark:hover:text-accent-dark"
                         :aria-label="t('cart.remove')"
                         @click="deleteItem(item.id)"
                     >
@@ -84,7 +84,7 @@
             </TransitionGroup>
 
             <aside
-                class="fixed inset-x-0 bottom-0 z-20 border-t border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-950 lg:sticky lg:top-6 lg:rounded-3xl lg:border lg:p-6 lg:shadow-sm lg:dark:bg-neutral-900"
+                class="sticky bottom-0 z-20 border-t border-neutral-200 bg-white py-4 dark:border-neutral-800 dark:bg-neutral-950 lg:bottom-auto lg:top-6 lg:px-6 lg:rounded-3xl lg:border lg:p-6 lg:shadow-sm lg:dark:bg-neutral-900"
             >
                 <div class="hidden lg:block">
                     <h2 class="text-xl font-semibold">{{ t("cart.summary") }}</h2>
@@ -102,27 +102,34 @@
                         {{ t(page.props.auth ? "cart.summary_note" : "cart.summary_note_guest") }}
                     </p>
                 </div>
+                <p v-if="failure" role="alert" class="error-text mb-3 text-sm font-semibold text-brand-strong lg:mt-4">
+                    {{ failure }}
+                </p>
                 <button
                     type="submit"
                     :disabled="processing"
-                    class="group flex w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-neutral-900 px-6 py-4 font-semibold text-white transition hover:bg-neutral-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-900 disabled:cursor-wait disabled:opacity-60 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200 dark:focus-visible:outline-white lg:mt-6"
+                    class="btn-primary w-full lg:mt-6"
                 >
                     {{ t("cart.order") }}
-                    <svg class="size-5 transition duration-300 group-hover:translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M5 12h14M13 6l6 6-6 6" />
-                    </svg>
                 </button>
             </aside>
         </form>
 
-        <div v-else class="mt-10 flex flex-col items-start gap-4">
-            <p class="text-xl text-neutral-600 dark:text-neutral-400" role="status">
+        <!-- waits for the stored cart to be read, so a filled cart never flashes as empty -->
+        <div v-else-if="loaded" class="mx-auto mt-8 flex max-w-md flex-col items-center py-10 text-center">
+            <span class="grid size-24 place-items-center rounded-full bg-neutral-100 text-brand dark:bg-neutral-900" aria-hidden="true">
+                <svg viewBox="0 0 24 24" class="size-11" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path v-if="placed" d="m5 12.5 4.5 4.5L19 7.5" />
+                    <path v-else d="M5 7h14l-1.4 13H6.4zM9 10V6.5a3 3 0 0 1 6 0V10" />
+                </svg>
+            </span>
+            <p class="mt-6 text-2xl font-bold text-balance" role="status">
                 {{ t(placed ? "cart.placed" : "cart.empty") }}
             </p>
-            <Link
-                href="/items"
-                class="rounded-full bg-neutral-900 px-6 py-3 font-semibold text-white transition hover:bg-neutral-700 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
-            >
+            <p v-if="!placed" class="mt-2 text-neutral-600 text-pretty dark:text-neutral-400">
+                {{ t("cart.empty_hint") }}
+            </p>
+            <Link href="/items" class="btn-primary mt-8">
                 {{ t("cart.continue") }}
             </Link>
         </div>
@@ -136,10 +143,12 @@ import { readCartLines, writeCartLines } from "@/cart";
 import type { CartLine } from "@/types";
 import { useTranslation } from "@/useTranslation";
 
-const { t, kitType } = useTranslation();
+const { t, kitType, garment } = useTranslation();
 const items = ref<CartLine[]>([]);
 const processing = ref(false);
 const placed = ref(false);
+const loaded = ref(false);
+const failure = ref("");
 const page = usePage();
 
 const totalUnits = computed(() =>
@@ -148,6 +157,7 @@ const totalUnits = computed(() =>
 
 onMounted(() => {
     items.value = readCartLines();
+    loaded.value = true;
 });
 
 function deleteItem(id: string) {
@@ -186,11 +196,15 @@ function itemsToDatabase() {
         {
             onStart: () => {
                 processing.value = true;
+                failure.value = "";
             },
             onSuccess: () => {
                 writeCartLines([]);
                 items.value = [];
                 placed.value = true;
+            },
+            onError: () => {
+                failure.value = t("cart.failed");
             },
             onFinish: () => {
                 processing.value = false;

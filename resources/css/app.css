@@ -1,28 +1,44 @@
 @import 'tailwindcss';
 
-@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
-@source '../../storage/framework/views/*.php';
 
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
+    /* Barlow Condensed reads small, so the type scale sits about 12% above Tailwind defaults */
+    --text-xs: 0.875rem;
+    --text-sm: 1rem;
+    --text-base: 1.125rem;
+    --text-lg: 1.25rem;
+    --text-xl: 1.375rem;
+    --text-2xl: 1.6875rem;
+    --text-4xl: 2.5rem;
     --color-brand: #dc2626;
     --color-brand-strong: #b91c1c;
+    /* links and icons on dark surfaces, where brand red is too dim for text */
+    --color-accent-dark: #38bdf8;
     --font-display: 'Barlow Condensed', ui-sans-serif, system-ui, sans-serif;
     --font-sans: 'Barlow Condensed', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
 :root {
-    --default-font-family: 'Barlow Condensed', sans-serif;
     --page-bg: #ffffff;
     --page-ink: #171717;
     --page-muted: #525252;
+    --page-surface: #f5f5f4;
+    --page-line: #e5e5e5;
+    /* kit photos have opaque white backgrounds: melted into light surfaces, kept as a clean plate in dark */
+    --photo-blend: multiply;
+    --photo-radius: 0;
 }
 
 html.dark {
     --page-bg: #0a0a0a;
     --page-ink: #f5f5f5;
     --page-muted: #a3a3a3;
+    --page-surface: #171717;
+    --page-line: #262626;
+    --photo-blend: normal;
+    --photo-radius: 1.25rem;
 }
 
 html {
@@ -72,12 +88,14 @@ html::-webkit-scrollbar-thumb:hover {
 }
 
 body {
-    font-family: var(--default-font-family);
+    font-size: 1.125rem;
     line-height: 1.6;
-     max-width: 1300px;
-        margin: 0 auto;
-        width:90%;
+    margin: 0;
+}
 
+::selection {
+    background: var(--color-brand);
+    color: #fff;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -92,28 +110,91 @@ body {
 /* Inertia progress bar: thicker, glowing, above the sticky header */
 #nprogress { pointer-events: none; }
 #nprogress .bar {
-    background: #dc2626;
+    background: var(--color-brand);
     position: fixed;
     z-index: 99999;
     top: 0;
     left: 0;
     width: 100%;
     height: 4px;
-    box-shadow: 0 0 10px #dc2626, 0 0 5px #dc2626;
-}
-#nprogress .peg {
-    display: block;
-    position: absolute;
-    right: 0;
-    width: 100px;
-    height: 100%;
-    box-shadow: 0 0 12px #dc2626, 0 0 6px #dc2626;
-    opacity: 1;
-    transform: rotate(3deg) translate(0, -4px);
 }
 
 input[type="search"]::-webkit-search-cancel-button {
     display: none;
+}
+
+@layer components {
+    .page-container {
+        width: 90%;
+        max-width: 1300px;
+        margin-inline: auto;
+    }
+
+    .page-title {
+        font-size: clamp(2.5rem, 5.5vw, 3.375rem);
+        line-height: 1.05;
+        text-wrap: balance;
+    }
+
+    .btn-primary,
+    .btn-secondary {
+        display: inline-flex;
+        min-height: 3.25rem;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        border-radius: 0.75rem;
+        padding-inline: 1.5rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .btn-primary {
+        background: var(--color-brand);
+        color: #fff;
+    }
+
+    .btn-primary:hover {
+        background: var(--color-brand-strong);
+    }
+
+    .btn-secondary {
+        border: 1.5px solid color-mix(in srgb, var(--page-ink) 20%, transparent);
+    }
+
+    .btn-secondary:hover {
+        background: color-mix(in srgb, var(--page-ink) 6%, transparent);
+    }
+
+    .btn-primary:focus-visible,
+    .btn-secondary:focus-visible {
+        outline: 2px solid var(--color-brand);
+        outline-offset: 3px;
+    }
+
+    .btn-primary:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+}
+
+/* dark theme errors: white text with a red marker, so they never read as links */
+.dark .error-text:not(:empty) {
+    color: #fff;
+}
+
+.dark .error-text:not(:empty)::before {
+    content: '!';
+    display: inline-grid;
+    place-items: center;
+    width: 1.15em;
+    height: 1.15em;
+    margin-right: 0.5em;
+    border-radius: 9999px;
+    background: var(--color-brand);
+    font-weight: 800;
+    line-height: 1;
 }
 
 @layer base {

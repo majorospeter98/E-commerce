@@ -1,7 +1,7 @@
 <template>
     <Head>
         <title>{{ t("register.head_title") }}</title>
-        <meta name="description" :content="t('register.head_title')" />
+        <meta name="description" :content="t('register.subtitle')" />
     </Head>
     <AuthShell
         :title="t('register.title')"
@@ -33,14 +33,14 @@
                 autocomplete="new-password"
                 :hint="t('auth.password_hint')"
                 :minlength="8"
-                v-model.trim="form.password"
+                v-model="form.password"
                 :error="errors.password"
             />
             <button
                 type="submit"
                 :disabled="isProcessing"
                 :aria-busy="isProcessing"
-                class="mt-2 h-14 w-full rounded-xl bg-brand text-base font-bold text-white shadow-[0_8px_20px_-8px_rgba(220,38,38,0.7)] transition-[background-color,transform,box-shadow] duration-200 hover:bg-brand-strong active:translate-y-px focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-wait disabled:opacity-70"
+                class="btn-primary mt-2 w-full"
             >
                 {{ isProcessing ? t("register.processing") : t("register.submit") }}
             </button>
@@ -49,7 +49,7 @@
             {{ t("register.has_account") }}
             <Link
                 href="/login"
-                class="font-bold text-neutral-950 dark:text-white dark:hover:text-red-400 underline decoration-brand decoration-2 underline-offset-4 hover:text-brand-strong"
+                class="font-bold text-neutral-950 dark:text-white dark:hover:text-accent-dark underline decoration-brand decoration-2 underline-offset-4 hover:text-brand-strong"
             >
                 {{ t("register.login_link") }}
             </Link>

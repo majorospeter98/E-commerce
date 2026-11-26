@@ -1,8 +1,8 @@
-import { ref, type Ref } from "vue";
+import { onMounted, ref, type Ref } from "vue";
 
 const STORAGE_KEY = "theme";
 
-const isDark = ref(typeof document !== "undefined" && document.documentElement.classList.contains("dark"));
+const isDark = ref(false);
 
 const applyTheme = (dark: boolean): void => {
     const root = document.documentElement;
@@ -22,4 +22,9 @@ const toggleTheme = () => {
     }
 };
 
-export const useTheme = (): { isDark: Ref<boolean>; toggleTheme: () => void } => ({ isDark, toggleTheme });
+export const useTheme = (): { isDark: Ref<boolean>; toggleTheme: () => void } => {
+    // the same first render as the server avoids hydration mismatches
+    onMounted(() => (isDark.value = document.documentElement.classList.contains("dark")));
+
+    return { isDark, toggleTheme };
+};

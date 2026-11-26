@@ -7,8 +7,18 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-test('guests cannot place an order', function () {
-    $this->post('/account/order', ['orders' => []])->assertRedirect('/login');
+test('a guest can place an order without an account', function () {
+    $item = Item::create(['team' => 'Arsenal', 'type' => 'Home', 'brand' => 'Adidas', 'image' => 'a.png', 'quantity' => '5', 'size' => 'M']);
+
+    $this->post('/account/order', ['orders' => [['item_id' => $item->id, 'size' => 'M', 'quantity' => 2]]])
+        ->assertRedirect('/cart');
+
+    $this->assertDatabaseHas('orders', ['user_id' => null]);
+    $this->assertDatabaseHas('order_items', ['item_id' => $item->id, 'quantity' => 2]);
+});
+
+test('guests cannot view the order history', function () {
+    $this->get('/account/order')->assertRedirect('/login');
 });
 
 test('placing an order stores its items and redirects to orders', function () {

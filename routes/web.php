@@ -16,6 +16,7 @@ Route::post('/locale', [LocaleController::class, 'update']);
 Route::get('/items', [ItemController::class, 'index']);
 Route::get('/items/{item}', [ItemController::class, 'show']);
 Route::get('/cart', [CartController::class, 'show']);
+Route::post('/account/order', [OrderController::class, 'store']);
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin']);
@@ -34,5 +35,4 @@ Route::middleware('auth')->group(function () {
     Route::delete('/deleteFavourite', [FavouriteController::class, 'destroy']);
 
     Route::get('/account/order', [OrderController::class, 'index']);
-    Route::post('/account/order', [OrderController::class, 'store']);
 });

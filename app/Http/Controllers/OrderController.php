@@ -35,6 +35,6 @@ class OrderController extends Controller
             }
         });
 
-        return redirect('/account/order');
+        return redirect(Auth::check() ? '/account/order' : '/cart');
     }
 }

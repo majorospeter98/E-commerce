@@ -99,7 +99,7 @@
                         </div>
                     </dl>
                     <p class="mt-5 border-t border-neutral-200 pt-5 text-sm text-neutral-600 dark:border-neutral-800 dark:text-neutral-400">
-                        {{ t("cart.summary_note") }}
+                        {{ t(page.props.auth ? "cart.summary_note" : "cart.summary_note_guest") }}
                     </p>
                 </div>
                 <button
@@ -116,7 +116,9 @@
         </form>
 
         <div v-else class="mt-10 flex flex-col items-start gap-4">
-            <p class="text-xl text-neutral-600 dark:text-neutral-400">{{ t("cart.empty") }}</p>
+            <p class="text-xl text-neutral-600 dark:text-neutral-400" role="status">
+                {{ t(placed ? "cart.placed" : "cart.empty") }}
+            </p>
             <Link
                 href="/items"
                 class="rounded-full bg-neutral-900 px-6 py-3 font-semibold text-white transition hover:bg-neutral-700 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
@@ -129,7 +131,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, TransitionGroup } from "vue";
-import { Link, router, Head } from "@inertiajs/vue3";
+import { Link, router, Head, usePage } from "@inertiajs/vue3";
 import { readCartLines, writeCartLines } from "@/cart";
 import type { CartLine } from "@/types";
 import { useTranslation } from "@/useTranslation";
@@ -137,6 +139,8 @@ import { useTranslation } from "@/useTranslation";
 const { t, kitType } = useTranslation();
 const items = ref<CartLine[]>([]);
 const processing = ref(false);
+const placed = ref(false);
+const page = usePage();
 
 const totalUnits = computed(() =>
     items.value.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0),
@@ -186,6 +190,7 @@ function itemsToDatabase() {
             onSuccess: () => {
                 writeCartLines([]);
                 items.value = [];
+                placed.value = true;
             },
             onFinish: () => {
                 processing.value = false;

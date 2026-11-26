@@ -102,6 +102,8 @@
     "cart.lines": "Products",
     "cart.units": "Total items",
     "cart.summary_note": "Your order is confirmed on your account page after you place it.",
+    "cart.summary_note_guest": "You are ordering as a guest, so this order will not be saved to an account.",
+    "cart.placed": "Thank you, your order has been placed.",
     "cart.quantity": "Quantity",
     "cart.increase": "Increase quantity",
     "cart.decrease": "Decrease quantity",

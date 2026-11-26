@@ -102,6 +102,8 @@
     "cart.lines": "Termékek",
     "cart.units": "Összes darab",
     "cart.summary_note": "A rendelésed a leadás után a fiókodban jelenik meg.",
+    "cart.summary_note_guest": "Vendégként rendelsz, ezért a rendelés nem kerül fiókhoz.",
+    "cart.placed": "Köszönjük, a rendelésedet rögzítettük.",
     "cart.quantity": "Mennyiség",
     "cart.increase": "Mennyiség növelése",
     "cart.decrease": "Mennyiség csökkentése",

@@ -4,6 +4,7 @@ use App\Models\Item;
 use App\Models\OrderItem;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 
 uses(RefreshDatabase::class);
 
@@ -61,4 +62,37 @@ test('a favourite can be removed', function () {
     $this->actingAs($user)->delete('/deleteFavourite', ['item_id' => $item->id])->assertRedirect();
 
     expect($user->favourites()->count())->toBe(0);
+});
+
+test('the price paid comes from the catalogue and survives later price changes', function () {
+    $item = Item::create(['team' => 'Arsenal', 'type' => 'Home', 'brand' => 'Adidas', 'image' => 'a.png', 'quantity' => '5', 'size' => 'M', 'price' => 29990]);
+
+    $this->post('/account/order', ['orders' => [['item_id' => $item->id, 'size' => 'M', 'quantity' => 2, 'unit_price' => 1]]])
+        ->assertRedirect('/cart');
+    $item->update(['price' => 35000]);
+
+    expect(OrderItem::sole()->unit_price)->toEqual(29990);
+});
+
+test('the order history lists the newest order first with the price paid', function () {
+    $user = User::factory()->create();
+    $item = Item::create(['team' => 'Arsenal', 'type' => 'Home', 'brand' => 'Adidas', 'image' => 'a.png', 'quantity' => '5', 'size' => 'M', 'price' => 29990]);
+    $older = $user->orders()->create();
+    $newer = $user->orders()->create();
+    $newer->items()->attach($item, ['size' => 'M', 'quantity' => 1, 'unit_price' => 29990]);
+
+    $this->actingAs($user)
+        ->get('/account/order')
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('orders.0.id', $newer->id)
+            ->where('orders.0.items.0.pivot.unit_price', 29990)
+            ->where('orders.1.id', $older->id));
+});
+
+test('the cart and product pages receive the current prices', function () {
+    $item = Item::create(['team' => 'Arsenal', 'type' => 'Home', 'brand' => 'Adidas', 'image' => 'a.png', 'quantity' => '5', 'size' => ['M'], 'price' => 29990]);
+
+    foreach (['/cart', "/items/{$item->id}"] as $url) {
+        $this->get($url)->assertInertia(fn (Assert $page) => $page->where("prices.{$item->id}", 29990));
+    }
 });

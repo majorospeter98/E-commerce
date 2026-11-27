@@ -26,6 +26,7 @@
             <div>
                 <h1>{{ item.team }} {{ kitType(item.type) }}</h1>
                 <p class="sub">{{ garment(item.image) }} · {{ item.brand }}</p>
+                <p class="price">{{ formatPrice(item.price) }}</p>
             </div>
 
             <fieldset class="show-size">
@@ -84,7 +85,7 @@
         <div class="show-scrim" :class="{ open: isDrawerOpen }" aria-hidden="true" @click="closeDrawer"></div>
         <aside class="show-drawer" :class="{ open: isDrawerOpen }" role="dialog" aria-modal="true" :aria-label="t('show.cart_label')">
             <header>
-                <span>{{ t("show.cart_count", { count: cartLines.length }) }}</span>
+                <span>{{ t("show.cart_count", { count: cartCount }) }}</span>
                 <button ref="closeButtonRef" type="button" @click="closeDrawer">{{ t("show.close") }}</button>
             </header>
 
@@ -99,6 +100,8 @@
                         <div>
                             <b>{{ line.team }}</b>
                             <span>{{ garment(line.image) }} · {{ t("show.line_meta", { type: kitType(line.type), brand: line.brand, size: line.size }) }}</span>
+                            <span>{{ t("orders.quantity", { quantity: Number(line.quantity) || 1 }) }}</span>
+                            <b v-if="prices[line.item_id] !== undefined">{{ formatPrice(prices[line.item_id] * (Number(line.quantity) || 1)) }}</b>
                         </div>
                         <button type="button" :aria-label="t('show.remove_label', { team: line.team, type: kitType(line.type) })" @click="removeLine(line.id)">
                             {{ t("show.remove") }}
@@ -109,6 +112,10 @@
             </div>
 
             <footer>
+                <p v-if="cartLines.length" class="total">
+                    <span>{{ t("cart.total") }}</span>
+                    <span>{{ formatPrice(cartTotal) }}</span>
+                </p>
                 <button type="button" class="btn-primary" :disabled="!cartLines.length" @click="router.get('/cart')">
                     {{ t("show.to_cart") }}
                 </button>
@@ -122,12 +129,12 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from "vue";
 import { Head, Link, router } from "@inertiajs/vue3";
 import { createLineId, readCartLines, writeCartLines } from "@/cart";
-import type { CartLine, Favourite, Item } from "@/types";
+import type { CartLine, Favourite, Item, Prices } from "@/types";
 import { useTranslation } from "@/useTranslation";
 
-const props = defineProps<{ item: Item; isFavourites: Pick<Favourite, "item_id">[] }>();
+const props = defineProps<{ item: Item; isFavourites: Pick<Favourite, "item_id">[]; prices: Prices }>();
 
-const { t, kitType, garment } = useTranslation();
+const { t, kitType, garment, formatPrice } = useTranslation();
 
 const sizes = computed(() => (Array.isArray(props.item.size) ? props.item.size : []));
 const error = ref("");
@@ -168,6 +175,10 @@ function stopZoom() {
 
 /* cart drawer (cart lives in localStorage under "items") */
 const cartLines = ref<CartLine[]>([]);
+const cartCount = computed(() => cartLines.value.reduce((sum, line) => sum + (Number(line.quantity) || 1), 0));
+const cartTotal = computed(() =>
+    cartLines.value.reduce((sum, line) => sum + (props.prices[line.item_id] ?? 0) * (Number(line.quantity) || 1), 0),
+);
 const isDrawerOpen = ref(false);
 const isMounted = ref(false);
 const addButtonRef = ref<HTMLButtonElement | null>(null);
@@ -208,17 +219,25 @@ function toCart() {
         return;
     }
 
-    const sendItemtoStorage: CartLine = {
-        id: createLineId(),
-        item_id: props.item.id,
-        image: props.item.image,
-        team: props.item.team,
-        type: props.item.type,
-        brand: props.item.brand,
-        size: selected.value,
-        quantity: 1,
-    };
-    writeCartLines([...readCartLines(), sendItemtoStorage]);
+    const lines = readCartLines();
+    const existingLine = lines.find((line) => line.item_id === props.item.id && line.size === selected.value);
+
+    if (existingLine) {
+        existingLine.quantity = (Number(existingLine.quantity) || 1) + 1;
+    } else {
+        lines.push({
+            id: createLineId(),
+            item_id: props.item.id,
+            image: props.item.image,
+            team: props.item.team,
+            type: props.item.type,
+            brand: props.item.brand,
+            size: selected.value,
+            quantity: 1,
+        });
+    }
+
+    writeCartLines(lines);
     openDrawer();
 }
 
@@ -315,6 +334,18 @@ onBeforeUnmount(() => {
     color: var(--page-muted);
     font-weight: 600;
     margin-top: 0.4rem;
+}
+.price {
+    font-size: 1.75rem;
+    font-weight: 800;
+    margin-top: 0.75rem;
+    font-variant-numeric: tabular-nums;
+}
+.total {
+    display: flex;
+    justify-content: space-between;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
 }
 .show-size {
     border: 0;
@@ -522,6 +553,7 @@ dd {
     display: block;
 }
 .line span {
+    display: block;
     color: var(--page-muted);
     font-size: 0.956rem;
 }

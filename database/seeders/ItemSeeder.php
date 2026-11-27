@@ -17,6 +17,7 @@ class ItemSeeder extends Seeder
                 'quantity' => 130,
                 'size' => ['S', 'L', 'XL'],
                 'image' => 'home.webp',
+                'price' => 29990,
             ],
             [
                 'team' => 'Barcelona',
@@ -25,6 +26,7 @@ class ItemSeeder extends Seeder
                 'quantity' => 100,
                 'size' => ['S', 'L', 'XL'],
                 'image' => 'away.webp',
+                'price' => 29990,
             ],
             [
                 'team' => 'Barcelona',
@@ -33,6 +35,7 @@ class ItemSeeder extends Seeder
                 'quantity' => 40,
                 'size' => ['S', 'L', 'XL'],
                 'image' => 'short.webp',
+                'price' => 12990,
             ],
             [
                 'team' => 'Real Madrid',
@@ -41,6 +44,7 @@ class ItemSeeder extends Seeder
                 'quantity' => 150,
                 'size' => ['S', 'L', 'XL'],
                 'image' => 'home.webp',
+                'price' => 29990,
             ],
             [
                 'team' => 'Real Madrid',
@@ -49,6 +53,7 @@ class ItemSeeder extends Seeder
                 'quantity' => 120,
                 'size' => ['S', 'L', 'XL'],
                 'image' => 'away.webp',
+                'price' => 29990,
             ],
             [
                 'team' => 'Real Madrid',
@@ -57,6 +62,7 @@ class ItemSeeder extends Seeder
                 'quantity' => 40,
                 'size' => ['S', 'L', 'XL'],
                 'image' => 'short.webp',
+                'price' => 12990,
             ],
         ];
 

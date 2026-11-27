@@ -12,6 +12,7 @@ interface Translation {
     t: (key: string, replacements?: Replacements) => string;
     kitType: (type: string) => string;
     garment: (image: string) => string;
+    formatPrice: (amount: number) => string;
     setLocale: (locale: Locale) => void;
 }
 
@@ -35,6 +36,10 @@ export const useTranslation = (): Translation => {
     /** The catalogue has no garment column; shorts are recognised by their image name. */
     const garment = (image: string): string => t(image.startsWith("short") ? "kit.shorts" : "kit.shirt");
 
+    /** Prices are whole forints, written with "Ft" in every language. */
+    const formatPrice = (amount: number): string =>
+        `${new Intl.NumberFormat(locale.value === "hu" ? "hu-HU" : "en-GB").format(amount)} Ft`;
+
     const setLocale = (next: Locale): void => {
         if (next === locale.value) {
             return;
@@ -42,5 +47,5 @@ export const useTranslation = (): Translation => {
         router.post("/locale", { locale: next }, { preserveScroll: true, preserveState: true });
     };
 
-    return { locale, t, kitType, garment, setLocale };
+    return { locale, t, kitType, garment, formatPrice, setLocale };
 };

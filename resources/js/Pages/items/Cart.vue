@@ -42,6 +42,10 @@
                             <p class="text-sm text-neutral-600 dark:text-neutral-400">
                                 {{ garment(item.image) }} · {{ kitType(item.type) }} · {{ item.brand }} · {{ t("cart.size", { size: item.size }) }}
                             </p>
+                            <p v-if="prices[item.item_id] !== undefined" class="mt-1 text-sm tabular-nums">
+                                {{ t("cart.unit_price", { price: formatPrice(prices[item.item_id]) }) }}
+                                <span class="ml-2 text-base font-bold">{{ formatPrice(lineTotal(item)) }}</span>
+                            </p>
                         </div>
 
                         <div
@@ -98,9 +102,17 @@
                             <dd class="font-medium tabular-nums">{{ totalUnits }}</dd>
                         </div>
                     </dl>
+                    <div class="mt-5 flex justify-between text-lg font-bold">
+                        <span>{{ t("cart.total") }}</span>
+                        <span class="tabular-nums">{{ formatPrice(total) }}</span>
+                    </div>
                     <p class="mt-5 border-t border-neutral-200 pt-5 text-sm text-neutral-600 dark:border-neutral-800 dark:text-neutral-400">
                         {{ t(page.props.auth ? "cart.summary_note" : "cart.summary_note_guest") }}
                     </p>
+                </div>
+                <div class="mb-3 flex justify-between text-lg font-bold lg:hidden">
+                    <span>{{ t("cart.total") }}</span>
+                    <span class="tabular-nums">{{ formatPrice(total) }}</span>
                 </div>
                 <p v-if="failure" role="alert" class="error-text mb-3 text-sm font-semibold text-brand-strong lg:mt-4">
                     {{ failure }}
@@ -140,10 +152,11 @@
 import { computed, onMounted, ref, TransitionGroup } from "vue";
 import { Link, router, Head, usePage } from "@inertiajs/vue3";
 import { readCartLines, writeCartLines } from "@/cart";
-import type { CartLine } from "@/types";
+import type { CartLine, Prices } from "@/types";
 import { useTranslation } from "@/useTranslation";
 
-const { t, kitType, garment } = useTranslation();
+const props = defineProps<{ prices: Prices }>();
+const { t, kitType, garment, formatPrice } = useTranslation();
 const items = ref<CartLine[]>([]);
 const processing = ref(false);
 const placed = ref(false);
@@ -154,6 +167,9 @@ const page = usePage();
 const totalUnits = computed(() =>
     items.value.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0),
 );
+
+const lineTotal = (line: CartLine): number => (props.prices[line.item_id] ?? 0) * (Number(line.quantity) || 1);
+const total = computed(() => items.value.reduce((sum, line) => sum + lineTotal(line), 0));
 
 onMounted(() => {
     items.value = readCartLines();

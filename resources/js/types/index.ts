@@ -6,7 +6,11 @@ export interface Item {
     quantity: string;
     size: string[];
     image: string;
+    price: number;
 }
+
+/** Current price of each item, keyed by item id. */
+export type Prices = Record<number, number>;
 
 export interface Favourite {
     id: number;
@@ -16,11 +20,12 @@ export interface Favourite {
 }
 
 export interface OrderItem extends Omit<Item, "size"> {
-    pivot: { size: string; quantity: number };
+    pivot: { size: string; quantity: number; unit_price: number | null };
 }
 
 export interface Order {
     id: number;
+    created_at: string;
     items: OrderItem[];
 }
 
@@ -32,6 +37,7 @@ export interface Kit {
     type: string;
     brand: string;
     image: string;
+    price?: number;
     details?: string[];
 }
 

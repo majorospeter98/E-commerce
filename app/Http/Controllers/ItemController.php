@@ -23,6 +23,7 @@ class ItemController extends Controller
         return Inertia::render('items/Show', [
             'item' => $item,
             'isFavourites' => $favourites,
+            'prices' => Item::pluck('price', 'id'),
         ]);
     }
 }

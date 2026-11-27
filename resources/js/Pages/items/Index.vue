@@ -51,6 +51,7 @@ const kits = computed(() =>
         type: item.type,
         brand: item.brand,
         image: item.image,
+        price: item.price,
     })),
 );
 </script>

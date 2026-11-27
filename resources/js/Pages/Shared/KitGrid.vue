@@ -6,13 +6,17 @@
                     <img
                         class="kit-img"
                         :src="`/Teams/450/${kit.team}/${kit.image}`"
-                        :alt="t('kit.alt', { team: kit.team, type: kitType(kit.type), garment: garment(kit.image) })"
+                        alt=""
+                        width="450"
+                        height="450"
+                        decoding="async"
                         :loading="index < 4 ? 'eager' : 'lazy'"
                     />
                 </span>
                 <span class="kit-caption">
                     <span class="kit-team">{{ kit.team }}</span>
                     <span class="kit-meta">{{ garment(kit.image) }} · {{ kitType(kit.type) }} · {{ kit.brand }}</span>
+                    <span v-if="kit.price !== undefined" class="kit-price">{{ formatPrice(kit.price) }}</span>
                     <span v-for="line in kit.details" :key="line" class="kit-meta">{{ line }}</span>
                 </span>
             </Link>
@@ -42,14 +46,20 @@ defineProps<{
     removeLabel?: (kit: Kit) => string;
 }>();
 const emit = defineEmits<{ remove: [kit: Kit] }>();
-const { t, kitType, garment } = useTranslation();
+const { t, kitType, garment, formatPrice } = useTranslation();
 </script>
 
 <style scoped>
 .kits {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr));
-    gap: 3rem 1.5rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2rem 0.75rem;
+}
+@media (min-width: 768px) {
+    .kits {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 3rem 1.5rem;
+    }
 }
 .kit {
     position: relative;
@@ -86,7 +96,6 @@ const { t, kitType, garment } = useTranslation();
 }
 .kit-link {
     display: block;
-    text-align: center;
     border-radius: 1rem;
     outline-offset: 4px;
 }
@@ -97,7 +106,14 @@ const { t, kitType, garment } = useTranslation();
     display: block;
     aspect-ratio: 1;
     overflow: hidden;
+    border: 1px solid var(--page-line);
     border-radius: 1.25rem;
+    background: var(--page-surface);
+    transition: border-color 0.2s;
+}
+.kit-link:hover .kit-stage,
+.kit-link:focus-visible .kit-stage {
+    border-color: color-mix(in srgb, var(--page-ink) 40%, transparent);
 }
 /* a deliberate rounded plate instead of a hard white rectangle */
 :global(html.dark .kit-stage) {
@@ -107,12 +123,15 @@ const { t, kitType, garment } = useTranslation();
     width: 100%;
     height: 100%;
     object-fit: contain;
+    mix-blend-mode: var(--photo-blend);
 }
 .kit-caption {
     display: block;
     margin-top: 0.75rem;
+    padding-inline: 0.25rem;
+    line-height: 1.35;
 }
-/* hover and focus only underline the name: the photo stays still */
+/* hover and focus underline the name and darken the tile edge: the photo stays still */
 .kit-team {
     font-weight: 800;
     font-size: 1.266rem;
@@ -123,6 +142,13 @@ const { t, kitType, garment } = useTranslation();
 .kit-link:hover .kit-team,
 .kit-link:focus-visible .kit-team {
     text-decoration-color: var(--color-brand);
+}
+.kit-price {
+    display: block;
+    margin-top: 0.375rem;
+    font-size: 1.266rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
 }
 .kit-meta {
     display: block;

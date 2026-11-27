@@ -34,6 +34,7 @@ const kits = computed(() =>
         type: favourite.item.type,
         brand: favourite.item.brand,
         image: favourite.item.image,
+        price: favourite.item.price,
     })),
 );
 

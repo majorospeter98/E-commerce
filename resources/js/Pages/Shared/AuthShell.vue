@@ -11,10 +11,10 @@ withDefaults(
 
 <template>
     <section
-        class="auth-enter mx-auto my-4 grid w-full max-w-[1040px] overflow-hidden rounded-3xl bg-white shadow-[0_24px_60px_-20px_rgba(10,10,10,0.25)] ring-1 ring-black/5 dark:bg-neutral-900 dark:shadow-none dark:ring-white/10 lg:min-h-[640px] lg:grid-cols-[1fr_1.05fr]"
+        class="auth-enter mx-auto my-4 grid w-full max-w-[1040px] overflow-hidden rounded-3xl bg-raised shadow-[0_24px_60px_-20px_rgba(10,10,10,0.25)] ring-1 ring-black/5 dark:shadow-none dark:ring-white/10 lg:min-h-[640px] lg:grid-cols-[1fr_1.05fr]"
     >
         <aside
-            class="relative hidden overflow-hidden bg-neutral-950 p-12 text-white lg:flex lg:flex-col lg:justify-between"
+            class="relative hidden overflow-hidden bg-night p-12 text-white lg:flex lg:flex-col lg:justify-between"
         >
             <div
                 class="pointer-events-none absolute -bottom-40 -left-32 size-[520px] rounded-full bg-[radial-gradient(closest-side,rgba(220,38,38,0.55),transparent)]"
@@ -40,7 +40,7 @@ withDefaults(
             </svg>
 
             <div class="relative mt-auto">
-                <ul class="space-y-3 text-base text-neutral-200">
+                <ul class="space-y-3 text-base text-night-ink">
                     <li
                         v-for="point in points"
                         :key="point"
@@ -68,15 +68,15 @@ withDefaults(
             class="flex flex-col justify-center px-6 py-10 sm:px-12 lg:px-14 lg:py-14"
         >
             <h1
-                class="text-balance text-4xl font-extrabold tracking-tight text-neutral-950 dark:text-white"
+                class="text-balance text-4xl font-extrabold tracking-tight text-heading"
             >
                 {{ title }}
             </h1>
-            <p class="mt-2 text-base text-neutral-600 dark:text-neutral-400">{{ subtitle }}</p>
+            <p class="mt-2 text-base text-muted">{{ subtitle }}</p>
             <div class="mt-8">
                 <slot />
             </div>
-            <p class="mt-8 text-center text-sm text-neutral-600 dark:text-neutral-400">
+            <p class="mt-8 text-center text-sm text-muted">
                 <slot name="switch" />
             </p>
         </div>

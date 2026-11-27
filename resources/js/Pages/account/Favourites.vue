@@ -4,7 +4,7 @@
         <meta name="description" :content="t('fav.head_desc')" />
     </Head>
 
-    <h1 class="page-title">{{ t("fav.heading") }}</h1>
+    <h1 class="page-title">{{ tCount("fav.heading", props.fav.length) }}</h1>
 
     <KitGrid
         v-if="props.fav.length > 0"
@@ -13,18 +13,18 @@
         :remove-label="removeLabel"
         @remove="removeFavourite"
     />
-    <p v-else class="mt-12 mb-9 text-neutral-600 dark:text-neutral-400">{{ t("fav.empty") }}</p>
+    <p v-else class="mt-12 mb-9 text-muted">{{ t("fav.empty") }}</p>
 </template>
 
 <script setup lang="ts">
 import { Head, router } from "@inertiajs/vue3";
-import { computed } from "vue";
+import { computed, nextTick } from "vue";
 import KitGrid from "@/Pages/Shared/KitGrid.vue";
 import type { Favourite, Kit } from "@/types";
 import { useTranslation } from "@/useTranslation";
 
 const props = defineProps<{ fav: Favourite[] }>();
-const { t } = useTranslation();
+const { t, tCount } = useTranslation();
 
 const kits = computed(() =>
     props.fav.map((favourite) => ({
@@ -45,9 +45,16 @@ function removeFavourite(kit: Kit): void {
     if (!favourite) {
         return;
     }
+    const position = props.fav.indexOf(favourite);
     router.delete("/deleteFavourite", {
         data: { item_id: favourite.item_id },
         preserveScroll: true,
+        onSuccess: () =>
+            nextTick(() => {
+                const buttons = document.querySelectorAll<HTMLButtonElement>(".kit-remove");
+                const next = buttons[Math.min(position, buttons.length - 1)];
+                (next ?? document.getElementById("main"))?.focus();
+            }),
     });
 }
 </script>

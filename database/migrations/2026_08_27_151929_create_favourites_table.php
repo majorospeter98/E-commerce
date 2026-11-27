@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('favourites', function (Blueprint $table) {
@@ -16,15 +13,10 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained();
             $table->foreignId('item_id')->constrained();
             $table->timestamps();
-             $table->unique(['user_id', 'item_id']);
-      
-
+            $table->unique(['user_id', 'item_id']);
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('favourites');

@@ -5,13 +5,12 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\FavouriteController;
 use App\Http\Controllers\ItemController;
-use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\OrderController;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/items');
 
-Route::post('/locale', [LocaleController::class, 'update']);
+Route::fallback(fn () => abort(404));
 
 Route::get('/items', [ItemController::class, 'index']);
 Route::get('/items/{item}', [ItemController::class, 'show']);

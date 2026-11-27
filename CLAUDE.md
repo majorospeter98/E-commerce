@@ -3,8 +3,8 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project
-Tech stack:
-Football e-commerce app: Laravel 13 + Inertia v3 + Vue 3 + Tailwind 4 (Vite 8), Pest 5 for tests, SQLite by default. 
+
+Football kit e-commerce app: Laravel 13 + Inertia v3 + Vue 3 (TypeScript) + Tailwind 4 (Vite 8), Pest 5 for tests, SQLite by default.
 
 ## Commands
 
@@ -13,16 +13,21 @@ Football e-commerce app: Laravel 13 + Inertia v3 + Vue 3 + Tailwind 4 (Vite 8), 
 - `php artisan db:seed --class=ItemSeeder` — seeds the product catalogue (not run by `DatabaseSeeder`)
 - `php artisan test --compact` / `php artisan test --compact tests/Feature/SomeTest.php` / `--filter=name` — run all / one file / one test
 - `vendor/bin/pint --dirty --format agent` — format changed PHP
-- `npm run build` / `npm run dev` — frontend assets
+- `npm run typecheck` — `vue-tsc`; `npm run build` runs it too, so type errors fail the build
+- `npm run dev` — Vite dev server
 
 ## Architecture
 
-- **No controllers**: all routes are closures in `routes/web.php` (render Inertia pages, validate, and write to the DB inline). `app/Http/Controllers` only has the base class. Follow this style unless asked to refactor.
-- **Inertia**: pages in `resources/js/Pages/{account,items}`; `resources/js/app.js` sets `Shared/Layout.vue` (Header/Footer) as the default layout for every page. Shared props come from `HandleInertiaRequests` (`auth` is just a boolean). Flash messages use `Inertia::flash`.
-- **Cart is client-side**: stored in `localStorage` under `items` (see `Show.vue`, `Cart.vue`, `Header.vue`). Only checkout hits the server: `POST /account/order` takes `orders[]` (`item_id`, `size`, `quantity`), creates an `Order` plus `OrderItem` rows, then the client clears the storage.
-- **Models**: `Item` (`size` cast to array), `Order` ↔ `Item` many-to-many through the `order_items` pivot (with `size`, `quantity`), `Favourite` (user_id/item_id; toggled via `POST /toFavourites` and `DELETE /deleteFavourite`), `User`. Models use `$guarded = []`.
-- Search in the header calls `router.get('/items', { search })`, but the `/items` route currently ignores `search` and returns `Item::all()`.
-- `tests/` only contains the default example test.
+- **Backend**: `routes/web.php` maps to controllers that return Inertia pages. Validation lives in Form Requests (`LocaleController` validates inline).
+- **Frontend**: `<script setup lang="ts">`, shared types in `resources/js/types`, `@/` means `resources/js/`. `resources/js/app.ts` sets `Pages/Shared/Layout.vue` as the default layout. Shared props come from `HandleInertiaRequests` (`auth` is just a boolean). Flash messages use `Inertia::flash`.
+- **Translations**: Hungarian (default) and English. The choice is kept in `localStorage` (`resources/js/locale.ts`), not in a cookie. Vue imports `lang/hu.json` and `lang/en.json` and translates in the browser with `useTranslation().t()`; add every key to both. `app.ts` sends the choice as the `X-Locale` header on every Inertia visit, and `SetLocale` applies it so PHP `__()` messages (validation, flash) match. A full page load has no header, so Blade renders Hungarian. Prices are whole forints, formatted with `formatPrice()`.
+- **Cart is client-side**: `localStorage` key `items`, accessed only through `resources/js/cart.ts` (`writeCartLines` fires `cart-updated`, which updates the header count). Only checkout hits the server: `POST /account/order` takes `orders[]` (`item_id`, `size`, `quantity`). Guests can order (`orders.user_id` is nullable).
+- **Prices**: `items.price` is the current price, passed to the cart as a `prices` prop (not stored in the cart). Checkout copies it from the DB into `order_items.unit_price`; never trust a client price. `unit_price` is null on orders older than that column.
+- **Search and filters** run client-side in `items/Index.vue`: header filters set `?category=`, the search box sets `?search=`; the server returns every item.
+- **Catalogue**: images are `public/Teams/{150,360,450}/{team}/{image}`, and every item needs all three (the shop picks 360 or 450 by screen size). `public/Teams/large/` holds optional bigger copies, used on the product page when the file exists (`ItemController::show`). There is no garment column: an image name starting with `short` means shorts. `ItemSeeder` runs on every container start (`Dockerfile`) and never updates existing rows, so changing existing catalogue data needs a migration.
+- **Theme**: dark mode is the `.dark` class on `<html>`, set before first paint by a script in `app.blade.php` and toggled by `useTheme.ts`. Colour and type tokens are in `resources/css/app.css`.
+- **Models**: `Order` ↔ `Item` goes through the `order_items` pivot (`size`, `quantity`, `unit_price`).
+- **Tests**: `RefreshDatabase` is not enabled globally; add `uses(RefreshDatabase::class)` to each test file that touches the DB. There is no `Item` factory; tests use `Item::create([...])`.
 
 <laravel-boost-guidelines>
 === foundation rules ===

@@ -49,7 +49,7 @@
             {{ t("register.has_account") }}
             <Link
                 href="/login"
-                class="font-bold text-neutral-950 dark:text-white dark:hover:text-accent-dark underline decoration-brand decoration-2 underline-offset-4 hover:text-brand-strong"
+                class="font-bold text-heading dark:hover:text-accent-dark underline decoration-brand decoration-2 underline-offset-4 hover:text-brand-strong"
             >
                 {{ t("register.login_link") }}
             </Link>
@@ -59,7 +59,7 @@
 
 <script setup lang="ts">
 import { Head, Link, router } from "@inertiajs/vue3";
-import { ref } from "vue";
+import { nextTick, ref } from "vue";
 import type { FormErrors } from "@/types";
 import AuthShell from "../Shared/AuthShell.vue";
 import FloatingInput from "../Shared/FloatingInput.vue";
@@ -78,6 +78,7 @@ const isProcessing = ref(false);
 const submitForm = function () {
     router.post("/register", form.value, {
         onStart: () => (isProcessing.value = true),
+        onError: () => nextTick(() => document.querySelector<HTMLInputElement>('[aria-invalid="true"]')?.focus()),
         onFinish: () => (isProcessing.value = false),
     });
 };

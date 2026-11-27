@@ -1,9 +1,11 @@
 <?php
 
 use App\Models\Item;
+use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Support\SessionKey;
 use Inertia\Testing\AssertableInertia as Assert;
 
 uses(RefreshDatabase::class);
@@ -28,7 +30,8 @@ test('placing an order stores its items and redirects to orders', function () {
 
     $this->actingAs($user)
         ->post('/account/order', ['orders' => [['item_id' => $item->id, 'size' => 'M', 'quantity' => 2]]])
-        ->assertRedirect('/account/order');
+        ->assertRedirect('/account/order')
+        ->assertSessionHas(SessionKey::FLASH_DATA, ['message' => __('msg.order.success')]);
 
     expect($user->orders()->count())->toBe(1)
         ->and(OrderItem::first()->quantity)->toBe(2);
@@ -95,4 +98,24 @@ test('the cart and product pages receive the current prices', function () {
     foreach (['/cart', "/items/{$item->id}"] as $url) {
         $this->get($url)->assertInertia(fn (Assert $page) => $page->where("prices.{$item->id}", 29990));
     }
+});
+
+test('the product page offers a large photo only when one exists', function (string $team, ?string $expected) {
+    $item = Item::create(['team' => $team, 'type' => 'Home', 'brand' => 'Nike', 'image' => 'home.webp', 'quantity' => '5', 'size' => ['M']]);
+
+    $this->get("/items/{$item->id}")
+        ->assertInertia(fn (Assert $page) => $page->where('largeImage', $expected));
+})->with([
+    'with a large copy' => ['Real Betis', '/Teams/large/Real Betis/home.webp'],
+    'without one' => ['Arsenal', null],
+]);
+
+test('an item knows the orders it was bought in', function () {
+    $item = Item::create(['team' => 'Arsenal', 'type' => 'Home', 'brand' => 'Adidas', 'image' => 'a.png', 'quantity' => '5', 'size' => ['M']]);
+    $order = Order::create();
+    $order->items()->attach($item, ['size' => 'M', 'quantity' => 3, 'unit_price' => 29990]);
+
+    expect($item->orders()->sole())
+        ->id->toBe($order->id)
+        ->pivot->quantity->toBe(3);
 });

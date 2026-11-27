@@ -8,18 +8,36 @@
         <div
             ref="stageRef"
             class="show-main"
-            :class="{ zoom: isZoomed }"
+            :class="{ zoom: isZoomed, pinned: isPinned }"
+            :style="{ '--zoom': photoWidth >= 800 ? 1.9 : 1.35 }"
             @pointerenter="startZoom"
             @pointermove="moveZoom"
+            @pointerdown="moveZoom"
             @pointerleave="stopZoom"
         >
             <img
+                ref="photoRef"
                 class="photo"
-                :style="{ transformOrigin: zoomOrigin }"
-                :src="`/Teams/450/${item.team}/${item.image}`"
+                :style="{ transformOrigin: zoomOrigin, maxWidth: photoLimit, maxHeight: photoLimit }"
+                :src="largeImage ?? `/Teams/450/${item.team}/${item.image}`"
                 :alt="t('kit.alt', { team: item.team, type: kitType(item.type), garment: garment(item.image) })"
+                @load="photoWidth = ($event.target as HTMLImageElement).naturalWidth"
             />
             <span class="hint" :style="{ opacity: isZoomed ? 0 : 1 }">{{ t("show.hover_zoom") }}</span>
+            <button
+                type="button"
+                class="zoom-button"
+                :aria-pressed="isPinned"
+                :aria-label="t('show.zoom')"
+                :title="t('show.zoom_help')"
+                @click="togglePinned"
+                @keydown="panZoom"
+            >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+                    <circle cx="11" cy="11" r="6.5" />
+                    <path :d="isPinned ? 'm16 16 4 4M8 11h6' : 'm16 16 4 4M8 11h6M11 8v6'" />
+                </svg>
+            </button>
         </div>
 
         <form class="show-info" @submit.prevent="toCart">
@@ -48,6 +66,7 @@
             <div class="row">
                 <button ref="addButtonRef" type="submit" class="btn-primary">{{ t("show.add") }}</button>
                 <Link
+                    v-if="isLoggedIn"
                     :method="isFavourite ? 'delete' : 'post'"
                     :href="isFavourite ? '/deleteFavourite' : '/toFavourites'"
                     :data="{ item_id: item.id }"
@@ -62,7 +81,18 @@
                         <path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" />
                     </svg>
                 </Link>
+                <button v-else type="button" class="heart" :aria-label="t('show.fav_add')" @click="askedToLogIn = true">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" />
+                    </svg>
+                </button>
             </div>
+            <p v-if="!isLoggedIn" class="fav-note" role="status">
+                <template v-if="askedToLogIn">
+                    {{ t("show.fav_login") }}
+                    <Link href="/login">{{ t("footer.login") }}</Link>
+                </template>
+            </p>
 
             <details open>
                 <summary>{{ t("show.details") }}</summary>
@@ -80,12 +110,11 @@
         </form>
     </section>
 
-    <!-- client only: a teleport rendered during SSR breaks hydration -->
     <Teleport v-if="isMounted" to="body">
         <div class="show-scrim" :class="{ open: isDrawerOpen }" aria-hidden="true" @click="closeDrawer"></div>
         <aside class="show-drawer" :class="{ open: isDrawerOpen }" role="dialog" aria-modal="true" :aria-label="t('show.cart_label')">
             <header>
-                <span>{{ t("show.cart_count", { count: cartCount }) }}</span>
+                <h2>{{ t("show.cart_count", { count: cartCount }) }}</h2>
                 <button ref="closeButtonRef" type="button" @click="closeDrawer">{{ t("show.close") }}</button>
             </header>
 
@@ -127,12 +156,20 @@
 
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from "vue";
-import { Head, Link, router } from "@inertiajs/vue3";
+import { Head, Link, router, usePage } from "@inertiajs/vue3";
 import { createLineId, readCartLines, writeCartLines } from "@/cart";
 import type { CartLine, Favourite, Item, Prices } from "@/types";
 import { useTranslation } from "@/useTranslation";
 
-const props = defineProps<{ item: Item; isFavourites: Pick<Favourite, "item_id">[]; prices: Prices }>();
+const props = defineProps<{
+    item: Item;
+    isFavourites: Pick<Favourite, "item_id">[];
+    prices: Prices;
+    largeImage: string | null;
+}>();
+const page = usePage();
+const isLoggedIn = computed(() => Boolean(page.props.auth));
+const askedToLogIn = ref(false);
 
 const { t, kitType, garment, formatPrice } = useTranslation();
 
@@ -150,18 +187,23 @@ function selectSize(size: string): void {
     error.value = "";
 }
 
-/* hover zoom (mouse only) */
+const photoRef = ref<HTMLImageElement | null>(null);
+const photoWidth = ref(0);
+const photoLimit = computed(() => (photoWidth.value ? `${photoWidth.value}px` : undefined));
+
 const stageRef = ref<HTMLElement | null>(null);
-const isZoomed = ref(false);
+const isHovering = ref(false);
+const isPinned = ref(false);
+const isZoomed = computed(() => isHovering.value || isPinned.value);
 const zoomOrigin = ref("50% 50%");
 const canZoom = (event: PointerEvent): boolean =>
     event.pointerType === "mouse" && !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 function startZoom(event: PointerEvent): void {
-    isZoomed.value = canZoom(event);
+    isHovering.value = canZoom(event);
 }
 function moveZoom(event: PointerEvent): void {
-    if (!isZoomed.value || !stageRef.value) {
+    if (!isZoomed.value || !stageRef.value || (event.target as Element).closest(".zoom-button")) {
         return;
     }
     const box = stageRef.value.getBoundingClientRect();
@@ -170,10 +212,32 @@ function moveZoom(event: PointerEvent): void {
     zoomOrigin.value = `${x}% ${y}%`;
 }
 function stopZoom() {
-    isZoomed.value = false;
+    isHovering.value = false;
+}
+function togglePinned(): void {
+    isPinned.value = !isPinned.value;
+    isHovering.value = false;
+    zoomOrigin.value = "50% 50%";
+}
+function panZoom(event: KeyboardEvent): void {
+    const steps: Record<string, [number, number]> = { ArrowLeft: [-15, 0], ArrowRight: [15, 0], ArrowUp: [0, -15], ArrowDown: [0, 15] };
+    if (!isPinned.value) {
+        return;
+    }
+    if (event.key === "Escape") {
+        togglePinned();
+        return;
+    }
+    const step = steps[event.key];
+    if (!step) {
+        return;
+    }
+    event.preventDefault();
+    const [x, y] = zoomOrigin.value.split(" ").map(parseFloat);
+    const clamp = (value: number): number => Math.min(100, Math.max(0, value));
+    zoomOrigin.value = `${clamp(x + step[0])}% ${clamp(y + step[1])}%`;
 }
 
-/* cart drawer (cart lives in localStorage under "items") */
 const cartLines = ref<CartLine[]>([]);
 const cartCount = computed(() => cartLines.value.reduce((sum, line) => sum + (Number(line.quantity) || 1), 0));
 const cartTotal = computed(() =>
@@ -188,7 +252,6 @@ function readCart() {
     cartLines.value = readCartLines();
 }
 
-/** The drawer lives on <body>, so an inert app root keeps keyboard focus inside it. */
 function setPageInert(inert: boolean): void {
     document.getElementById("app")?.toggleAttribute("inert", inert);
     document.body.style.overflow = inert ? "hidden" : "";
@@ -249,6 +312,9 @@ function onKeydown(event: KeyboardEvent): void {
 
 onMounted(() => {
     isMounted.value = true;
+    if (photoRef.value?.complete) {
+        photoWidth.value = photoRef.value.naturalWidth;
+    }
     window.addEventListener("keydown", onKeydown);
 });
 onBeforeUnmount(() => {
@@ -293,7 +359,30 @@ onBeforeUnmount(() => {
     transition: transform 0.45s var(--ease), opacity 0.3s;
 }
 .show-main.zoom > .photo {
-    transform: scale(1.9);
+    transform: scale(var(--zoom, 1.35));
+}
+.show-main.pinned {
+    touch-action: none;
+    cursor: move;
+}
+.zoom-button {
+    position: absolute;
+    right: 1rem;
+    bottom: 1rem;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border: 1.5px solid var(--color-control);
+    border-radius: 999px;
+    background: var(--page-bg);
+    color: var(--page-ink);
+    cursor: pointer;
+}
+.zoom-button svg {
+    width: 1.4rem;
+    height: 1.4rem;
 }
 .hint {
     position: absolute;
@@ -398,9 +487,22 @@ onBeforeUnmount(() => {
     height: 3.5rem;
     display: grid;
     place-items: center;
-    border: 1.5px solid var(--page-line);
+    border: 1.5px solid var(--color-control);
     border-radius: 0.9rem;
     cursor: pointer;
+}
+.fav-note {
+    margin-top: -0.8rem;
+    font-weight: 600;
+}
+.fav-note:empty {
+    display: none;
+}
+.fav-note a {
+    display: inline-block;
+    padding-block: 0.6rem;
+    text-decoration: underline 2px var(--color-brand);
+    text-underline-offset: 4px;
 }
 .heart svg {
     width: 24px;
@@ -433,7 +535,7 @@ summary::-webkit-details-marker {
 }
 summary::after {
     content: "+";
-    font-weight: 500;
+    font-weight: 600;
     font-size: 1.406rem;
     line-height: 1;
     transition: rotate 0.3s var(--ease);
@@ -459,7 +561,6 @@ dd {
     outline-offset: 3px;
 }
 
-/* drawer */
 .show-scrim {
     position: fixed;
     inset: 0;
@@ -505,8 +606,14 @@ dd {
     font-weight: 800;
     font-size: 1.294rem;
 }
+.show-drawer header h2 {
+    font: inherit;
+    letter-spacing: normal;
+}
 .show-drawer header button {
     font: inherit;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
     cursor: pointer;
 }
 .lines {
@@ -558,6 +665,7 @@ dd {
     font-size: 0.956rem;
 }
 .line button {
+    min-width: 2.75rem;
     min-height: 2.75rem;
     color: var(--page-muted);
     font-weight: 700;
@@ -584,6 +692,11 @@ dd {
     }
     .show-info {
         position: static;
+    }
+    .show-main {
+        width: 100%;
+        max-width: max(80svh, 17rem);
+        justify-self: center;
     }
 }
 @media (prefers-reduced-motion: reduce) {

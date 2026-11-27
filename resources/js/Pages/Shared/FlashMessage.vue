@@ -6,7 +6,6 @@ import { useTranslation } from "@/useTranslation";
 const page = usePage();
 const { t } = useTranslation();
 
-/** The server only flashes confirmations; errors are shown next to their form. */
 const text = computed(() => (page.flash as { message?: string } | undefined)?.message ?? "");
 const dismissed = ref(false);
 

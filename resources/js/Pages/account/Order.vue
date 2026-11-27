@@ -4,12 +4,12 @@
         <meta name="description" :content="t('orders.head_desc')" />
     </Head>
 
-    <h1 class="page-title">{{ t("orders.heading") }}</h1>
+    <h1 class="page-title">{{ tCount("orders.heading", orders.length) }}</h1>
 
     <section
         v-for="order in orders"
         :key="order.id"
-        class="mt-10 mb-12 border-b border-neutral-200 pb-8 dark:border-neutral-800"
+        class="mt-10 mb-12 border-b border-line pb-8"
     >
         <div class="mb-6 flex flex-wrap items-baseline justify-between gap-2">
             <h2 class="text-xl font-semibold">{{ t("orders.placed_on", { date: order.date }) }}</h2>
@@ -17,9 +17,9 @@
                 {{ t("orders.total", { total: formatPrice(order.total) }) }}
             </p>
         </div>
-        <KitGrid :kits="order.kits" />
+        <KitGrid :kits="order.kits" heading-level="h3" />
     </section>
-    <p v-if="!orders.length" class="mt-12 mb-9 text-neutral-600 dark:text-neutral-400">{{ t("orders.empty") }}</p>
+    <p v-if="!orders.length" class="mt-12 mb-9 text-muted">{{ t("orders.empty") }}</p>
 </template>
 
 <script setup lang="ts">
@@ -30,9 +30,8 @@ import type { Order } from "@/types";
 import { useTranslation } from "@/useTranslation";
 
 const props = defineProps<{ orders: Order[] }>();
-const { t, locale, formatPrice } = useTranslation();
+const { t, tCount, locale, formatPrice } = useTranslation();
 
-/** Orders placed before prices existed have no total rather than a guessed one. */
 const orderTotal = (order: Order): number | null =>
     order.items.some((item) => item.pivot.unit_price === null)
         ? null

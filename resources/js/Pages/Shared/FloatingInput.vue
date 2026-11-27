@@ -33,7 +33,7 @@ const describedBy = computed(() => {
 
 <template>
     <div>
-        <label :for="id" class="mb-1.5 block text-sm font-semibold text-neutral-800 dark:text-neutral-200">
+        <label :for="id" class="mb-1.5 block text-sm font-semibold text-label">
             {{ label }}
         </label>
         <div class="relative">
@@ -47,16 +47,16 @@ const describedBy = computed(() => {
                 :minlength="minlength"
                 :aria-invalid="error ? 'true' : 'false'"
                 :aria-describedby="describedBy"
-                class="block h-13 w-full rounded-xl border bg-white px-4 text-base text-neutral-900 caret-brand outline-none transition-[border-color,box-shadow] duration-200 focus:border-brand focus:ring-4 focus:ring-brand/15 dark:bg-neutral-950 dark:text-neutral-100"
+                class="block h-13 w-full rounded-xl border bg-page px-4 text-base text-ink caret-brand outline-none transition-[border-color,box-shadow] duration-200 focus:border-brand focus:ring-4 focus:ring-brand/15"
                 :class="[
-                    error ? 'border-brand-strong dark:border-brand' : 'border-neutral-300 dark:border-neutral-600',
+                    error ? 'border-brand-strong dark:border-brand' : 'border-control',
                     isPasswordField ? 'pr-14' : '',
                 ]"
             />
             <button
                 v-if="isPasswordField"
                 type="button"
-                class="absolute right-1.5 top-1 flex size-11 items-center justify-center rounded-lg text-neutral-600 transition-colors hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white focus-visible:outline-2 focus-visible:outline-brand"
+                class="absolute right-1.5 top-1 flex size-11 items-center justify-center rounded-lg text-muted transition-colors hover:text-strong focus-visible:outline-2 focus-visible:outline-brand"
                 :aria-label="
                     isPasswordVisible ? t('auth.hide_password') : t('auth.show_password')
                 "
@@ -89,7 +89,7 @@ const describedBy = computed(() => {
         >
             {{ error }}
         </p>
-        <p v-if="hint" :id="hintId" class="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
+        <p v-if="hint" :id="hintId" class="mt-2 text-sm text-muted">
             {{ hint }}
         </p>
     </div>

@@ -20,7 +20,10 @@ class ItemController extends Controller
     {
         $favourites = Auth::user() ? Auth::user()->favourites()->get() : [];
 
+        $largePath = "Teams/large/{$item->team}/{$item->image}";
+
         return Inertia::render('items/Show', [
+            'largeImage' => is_file(public_path($largePath)) ? "/{$largePath}" : null,
             'item' => $item,
             'isFavourites' => $favourites,
             'prices' => Item::pluck('price', 'id'),

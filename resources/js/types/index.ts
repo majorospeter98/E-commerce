@@ -9,7 +9,6 @@ export interface Item {
     price: number;
 }
 
-/** Current price of each item, keyed by item id. */
 export type Prices = Record<number, number>;
 
 export interface Favourite {
@@ -29,7 +28,6 @@ export interface Order {
     items: OrderItem[];
 }
 
-/** A kit card shown by Shared/KitGrid.vue (shop, favourites and orders). */
 export interface Kit {
     key: string | number;
     href: string;
@@ -41,7 +39,6 @@ export interface Kit {
     details?: string[];
 }
 
-/** A line of the client-side cart, stored in localStorage under "items". */
 export interface CartLine {
     id: string;
     item_id: number;

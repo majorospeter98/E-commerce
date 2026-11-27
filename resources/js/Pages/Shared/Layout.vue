@@ -1,15 +1,20 @@
 <script setup lang="ts">
+import { onMounted, watch } from "vue";
+import { restoreLocale } from "@/locale";
 import Header from "./Header.vue";
 import FlashMessage from "./FlashMessage.vue";
 import Footer from "./Footer.vue";
 import { useTranslation } from "@/useTranslation";
 
-const { t } = useTranslation();
+const { t, locale } = useTranslation();
+
+watch(locale, (value) => (document.documentElement.lang = value));
+onMounted(restoreLocale);
 </script>
 
 <template>
     <div class="flex min-h-screen flex-col">
-        <a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-neutral-950 focus:px-4 focus:py-3 focus:font-bold focus:text-white">
+        <a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-night focus:px-4 focus:py-3 focus:font-bold focus:text-white">
             {{ t("layout.skip") }}
         </a>
         <Header />

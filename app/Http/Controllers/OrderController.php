@@ -38,6 +38,12 @@ class OrderController extends Controller
             }
         });
 
-        return redirect(Auth::check() ? '/account/order' : '/cart');
+        if (! Auth::check()) {
+            return redirect('/cart');
+        }
+
+        Inertia::flash('message', __('msg.order.success'));
+
+        return redirect('/account/order');
     }
 }

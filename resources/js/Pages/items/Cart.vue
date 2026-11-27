@@ -11,9 +11,9 @@
             {{ t("cart.heading") }}
             <span
                 v-if="items.length > 0"
-                class="ml-2 text-xl font-normal text-neutral-500 tabular-nums dark:text-neutral-400"
+                class="ml-2 text-xl font-normal text-faint tabular-nums"
             >
-                {{ t("cart.items_count", { count: totalUnits }) }}
+                {{ tCount("cart.items_count", totalUnits) }}
             </span>
         </h1>
 
@@ -26,46 +26,49 @@
                 <li
                     v-for="item in items"
                     :key="item.id"
-                    class="flex items-center gap-5 rounded-3xl border border-neutral-200 bg-white p-4 shadow-sm dark:border-neutral-800 dark:bg-neutral-900 sm:p-5"
+                    class="flex items-center gap-5 rounded-3xl border border-line bg-raised p-4 shadow-sm sm:p-5"
                 >
-                    <div class="flex size-24 shrink-0 items-center justify-center rounded-2xl bg-neutral-100 dark:bg-neutral-800 sm:size-32">
+                    <div class="flex size-24 shrink-0 items-center justify-center rounded-2xl bg-chip sm:size-32">
                         <img
                             :src="`/Teams/150/${item.team}/${item.image}`"
                             :alt="t('kit.alt', { team: item.team, type: kitType(item.type), garment: garment(item.image) })"
-                            class="size-20 object-contain sm:size-28"
+                            class="size-20 object-contain dark:rounded-xl sm:size-28"
                         />
                     </div>
 
                     <div class="flex min-w-0 flex-1 flex-col gap-3">
                         <div>
                             <h2 class="truncate text-lg font-semibold">{{ item.team }}</h2>
-                            <p class="text-sm text-neutral-600 dark:text-neutral-400">
+                            <p class="text-sm text-muted">
                                 {{ garment(item.image) }} · {{ kitType(item.type) }} · {{ item.brand }} · {{ t("cart.size", { size: item.size }) }}
                             </p>
-                            <p v-if="prices[item.item_id] !== undefined" class="mt-1 text-sm tabular-nums">
+                            <p v-if="prices[item.item_id] !== undefined" class="mt-1 flex flex-wrap gap-x-2 text-sm whitespace-nowrap tabular-nums">
                                 {{ t("cart.unit_price", { price: formatPrice(prices[item.item_id]) }) }}
-                                <span class="ml-2 text-base font-bold">{{ formatPrice(lineTotal(item)) }}</span>
+                                <span class="text-base font-bold">{{ formatPrice(lineTotal(item)) }}</span>
+                            </p>
+                            <p v-if="unavailable.includes(item.id)" class="error-text mt-1 text-sm font-semibold text-brand-strong">
+                                {{ t("cart.line_unavailable") }}
                             </p>
                         </div>
 
                         <div
-                            class="inline-flex w-fit items-center rounded-full border border-neutral-200 dark:border-neutral-700"
+                            class="inline-flex w-fit items-center rounded-full border border-control"
                             role="group"
                             :aria-label="t('cart.quantity')"
                         >
                             <button
                                 type="button"
-                                class="flex size-11 cursor-pointer items-center justify-center rounded-full transition hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-neutral-900 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-neutral-800 dark:focus-visible:outline-neutral-300"
+                                class="flex size-11 cursor-pointer items-center justify-center rounded-full transition hover:bg-chip focus-visible:outline-2 focus-visible:outline-focus disabled:cursor-not-allowed disabled:opacity-40"
                                 :disabled="item.quantity <= 1"
                                 :aria-label="t('cart.decrease')"
                                 @click="changeQuantity(item.id, -1)"
                             >
                                 <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14" /></svg>
                             </button>
-                            <span class="min-w-8 text-center font-medium tabular-nums">{{ item.quantity }}</span>
+                            <span class="min-w-8 text-center font-semibold tabular-nums">{{ item.quantity }}</span>
                             <button
                                 type="button"
-                                class="flex size-11 cursor-pointer items-center justify-center rounded-full transition hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-neutral-900 dark:hover:bg-neutral-800 dark:focus-visible:outline-neutral-300"
+                                class="flex size-11 cursor-pointer items-center justify-center rounded-full transition hover:bg-chip focus-visible:outline-2 focus-visible:outline-focus"
                                 :aria-label="t('cart.increase')"
                                 @click="changeQuantity(item.id, 1)"
                             >
@@ -76,7 +79,7 @@
 
                     <button
                         type="button"
-                        class="flex size-11 shrink-0 cursor-pointer items-center justify-center self-start rounded-full text-neutral-500 transition hover:bg-neutral-100 hover:text-brand focus-visible:outline-2 focus-visible:outline-red-600 dark:hover:bg-neutral-800 dark:hover:text-accent-dark"
+                        class="flex size-11 shrink-0 cursor-pointer items-center justify-center self-start rounded-full text-icon-strong transition hover:bg-chip hover:text-brand focus-visible:outline-2 focus-visible:outline-red-600 dark:hover:text-accent-dark"
                         :aria-label="t('cart.remove')"
                         @click="deleteItem(item.id)"
                     >
@@ -88,25 +91,25 @@
             </TransitionGroup>
 
             <aside
-                class="sticky bottom-0 z-20 border-t border-neutral-200 bg-white py-4 dark:border-neutral-800 dark:bg-neutral-950 lg:bottom-auto lg:top-6 lg:px-6 lg:rounded-3xl lg:border lg:p-6 lg:shadow-sm lg:dark:bg-neutral-900"
+                class="sticky bottom-0 z-20 border-t border-line bg-page py-4 lg:bottom-auto lg:top-6 lg:px-6 lg:rounded-3xl lg:border lg:p-6 lg:shadow-sm lg:bg-raised"
             >
                 <div class="hidden lg:block">
                     <h2 class="text-xl font-semibold">{{ t("cart.summary") }}</h2>
                     <dl class="mt-5 space-y-2 text-sm">
                         <div class="flex justify-between">
-                            <dt class="text-neutral-600 dark:text-neutral-400">{{ t("cart.lines") }}</dt>
-                            <dd class="font-medium tabular-nums">{{ items.length }}</dd>
+                            <dt class="text-muted">{{ tCount("cart.lines", items.length) }}</dt>
+                            <dd class="font-semibold tabular-nums">{{ items.length }}</dd>
                         </div>
                         <div class="flex justify-between">
-                            <dt class="text-neutral-600 dark:text-neutral-400">{{ t("cart.units") }}</dt>
-                            <dd class="font-medium tabular-nums">{{ totalUnits }}</dd>
+                            <dt class="text-muted">{{ tCount("cart.units", totalUnits) }}</dt>
+                            <dd class="font-semibold tabular-nums">{{ totalUnits }}</dd>
                         </div>
                     </dl>
                     <div class="mt-5 flex justify-between text-lg font-bold">
                         <span>{{ t("cart.total") }}</span>
                         <span class="tabular-nums">{{ formatPrice(total) }}</span>
                     </div>
-                    <p class="mt-5 border-t border-neutral-200 pt-5 text-sm text-neutral-600 dark:border-neutral-800 dark:text-neutral-400">
+                    <p class="mt-5 border-t border-line pt-5 text-sm text-muted">
                         {{ t(page.props.auth ? "cart.summary_note" : "cart.summary_note_guest") }}
                     </p>
                 </div>
@@ -127,9 +130,8 @@
             </aside>
         </form>
 
-        <!-- waits for the stored cart to be read, so a filled cart never flashes as empty -->
         <div v-else-if="loaded" class="mx-auto mt-8 flex max-w-md flex-col items-center py-10 text-center">
-            <span class="grid size-24 place-items-center rounded-full bg-neutral-100 text-brand dark:bg-neutral-900" aria-hidden="true">
+            <span class="grid size-24 place-items-center rounded-full bg-field text-brand" aria-hidden="true">
                 <svg viewBox="0 0 24 24" class="size-11" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                     <path v-if="placed" d="m5 12.5 4.5 4.5L19 7.5" />
                     <path v-else d="M5 7h14l-1.4 13H6.4zM9 10V6.5a3 3 0 0 1 6 0V10" />
@@ -138,7 +140,7 @@
             <p class="mt-6 text-2xl font-bold text-balance" role="status">
                 {{ t(placed ? "cart.placed" : "cart.empty") }}
             </p>
-            <p v-if="!placed" class="mt-2 text-neutral-600 text-pretty dark:text-neutral-400">
+            <p v-if="!placed" class="mt-2 text-muted text-pretty">
                 {{ t("cart.empty_hint") }}
             </p>
             <Link href="/items" class="btn-primary mt-8">
@@ -156,12 +158,13 @@ import type { CartLine, Prices } from "@/types";
 import { useTranslation } from "@/useTranslation";
 
 const props = defineProps<{ prices: Prices }>();
-const { t, kitType, garment, formatPrice } = useTranslation();
+const { t, tCount, kitType, garment, formatPrice } = useTranslation();
 const items = ref<CartLine[]>([]);
 const processing = ref(false);
 const placed = ref(false);
 const loaded = ref(false);
 const failure = ref("");
+const unavailable = ref<string[]>([]);
 const page = usePage();
 
 const totalUnits = computed(() =>
@@ -213,14 +216,19 @@ function itemsToDatabase() {
             onStart: () => {
                 processing.value = true;
                 failure.value = "";
+                unavailable.value = [];
             },
             onSuccess: () => {
                 writeCartLines([]);
                 items.value = [];
                 placed.value = true;
             },
-            onError: () => {
+            onError: (errors) => {
                 failure.value = t("cart.failed");
+                unavailable.value = Object.keys(errors).flatMap((key) => {
+                    const index = key.match(/^orders\.(\d+)\.item_id$/)?.[1];
+                    return index === undefined ? [] : [orders[Number(index)].id];
+                });
             },
             onFinish: () => {
                 processing.value = false;

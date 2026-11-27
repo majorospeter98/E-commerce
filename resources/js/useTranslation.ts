@@ -1,51 +1,42 @@
-import { router, usePage } from "@inertiajs/vue3";
-import { computed, type ComputedRef } from "vue";
+import { computed, type Ref } from "vue";
+import en from "../../lang/en.json";
+import hu from "../../lang/hu.json";
+import { locale, saveLocale, type Locale } from "@/locale";
 
-export type Locale = "hu" | "en";
+export { LOCALES, type Locale } from "@/locale";
 
-export const LOCALES: Locale[] = ["hu", "en"];
+const MESSAGES: Record<Locale, Record<string, string>> = { hu, en };
 
 type Replacements = Record<string, string | number>;
 
 interface Translation {
-    locale: ComputedRef<Locale>;
+    locale: Ref<Locale>;
     t: (key: string, replacements?: Replacements) => string;
+    tCount: (key: string, count: number) => string;
     kitType: (type: string) => string;
     garment: (image: string) => string;
     formatPrice: (amount: number) => string;
     setLocale: (locale: Locale) => void;
 }
 
-/**
- * Reads the active locale and the translation strings the server shares
- * through Inertia (see HandleInertiaRequests), and switches the locale.
- */
 export const useTranslation = (): Translation => {
-    const page = usePage();
-    const locale = computed(() => (page.props.locale as Locale | undefined) ?? "hu");
-    const strings = computed(() => (page.props.translations as Record<string, string> | undefined) ?? {});
+    const strings = computed(() => MESSAGES[locale.value]);
 
     const t = (key: string, replacements: Replacements = {}): string =>
         (strings.value[key] ?? key).replace(/:(\w+)/g, (match, name: string) =>
             name in replacements ? String(replacements[name]) : match,
         );
 
-    /** Kit types ("Home", "Away") are data values; translate them when a label exists. */
+    const tCount = (key: string, count: number): string => t(count === 1 ? `${key}_one` : key, { count });
+
     const kitType = (type: string): string => strings.value[`kit.type.${type}`] ?? type;
 
-    /** The catalogue has no garment column; shorts are recognised by their image name. */
     const garment = (image: string): string => t(image.startsWith("short") ? "kit.shorts" : "kit.shirt");
 
-    /** Prices are whole forints, written with "Ft" in every language. */
     const formatPrice = (amount: number): string =>
         `${new Intl.NumberFormat(locale.value === "hu" ? "hu-HU" : "en-GB").format(amount)} Ft`;
 
-    const setLocale = (next: Locale): void => {
-        if (next === locale.value) {
-            return;
-        }
-        router.post("/locale", { locale: next }, { preserveScroll: true, preserveState: true });
-    };
+    const setLocale = saveLocale;
 
-    return { locale, t, kitType, garment, formatPrice, setLocale };
+    return { locale, t, tCount, kitType, garment, formatPrice, setLocale };
 };

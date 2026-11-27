@@ -18,12 +18,10 @@ const toggleTheme = () => {
     try {
         localStorage.setItem(STORAGE_KEY, next ? "dark" : "light");
     } catch {
-        // storage unavailable: the choice just won't persist
     }
 };
 
 export const useTheme = (): { isDark: Ref<boolean>; toggleTheme: () => void } => {
-    // the same first render as the server avoids hydration mismatches
     onMounted(() => (isDark.value = document.documentElement.classList.contains("dark")));
 
     return { isDark, toggleTheme };

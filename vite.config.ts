@@ -11,7 +11,7 @@ export default defineConfig({
             refresh: true,
             fonts: [
                 bunny('Barlow Condensed', {
-                    weights: [400, 500, 600, 700, 800],
+                    weights: [400, 600, 700, 800],
                     subsets: ['latin', 'latin-ext'],
                     preload: [
                         { weight: 600, style: 'normal' },

@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import { Link, usePage } from "@inertiajs/vue3";
-import { computed, h, onBeforeUnmount, onMounted, ref, useId, watch } from "vue";
+import { computed, h, nextTick, onBeforeUnmount, onMounted, ref, useId, watch } from "vue";
 import type { FunctionalComponent } from "vue";
 import { useTranslation } from "@/useTranslation";
 import { useTheme } from "../../useTheme";
 
-/* ---------------------------------------------------------------- tear --- */
 const RIDGE_N = 84;
 const START = 1.06;
 const FLAPS = 6;
@@ -183,13 +182,11 @@ function mixHex(a: string, b: string, t: number): string {
     return "#" + x.map((v, i) => Math.round(v + (y[i] - v) * k).toString(16).padStart(2, "0")).join("");
 }
 
-/* --------------------------------------------------------------- icons --- */
 const ICONS: Record<string, string> = {
     chevL: '<path d="M14.5 5.5 8 12l6.5 6.5" />',
     squiggle: '<path d="M3.5 15c1.8-3.2 3.6-3.2 5.4 0s3.6 3.2 5.4 0 3.6-3.2 5.4 0" />',
 };
 
-/* Small functional icon component. */
 const Icon: FunctionalComponent<{ name: string }> = (props) =>
     h("svg", {
         viewBox: "0 0 24 24",
@@ -204,7 +201,23 @@ const Icon: FunctionalComponent<{ name: string }> = (props) =>
     });
 Icon.props = ["name"];
 
-/* --------------------------------------------------------------- props --- */
+const spot = (degrees: number, radius: number, cx = 50, cy = 50): Point => [
+    cx + radius * Math.cos((degrees * Math.PI) / 180),
+    cy + radius * Math.sin((degrees * Math.PI) / 180),
+];
+const DIRECTIONS = [-90, -18, 54, 126, 198];
+const OUTER = DIRECTIONS.map((d) => {
+    const [x, y] = spot(d, 47);
+    return [0, 72, 144, 216, 288].map((turn) => spot(d + 180 + turn, 14, x, y));
+});
+const BALL_PANELS = [DIRECTIONS.map((d) => spot(d, 17)), ...OUTER]
+    .map((points) => "M" + points.map((p) => p[0].toFixed(1) + " " + p[1].toFixed(1)).join("L") + "Z")
+    .join("");
+const BALL_SEAMS = DIRECTIONS.map((d, i) => {
+    const line = (a: Point, b: Point) => "M" + a[0].toFixed(1) + " " + a[1].toFixed(1) + "L" + b[0].toFixed(1) + " " + b[1].toFixed(1);
+    return line(spot(d, 17), OUTER[i][0]) + line(OUTER[i][4], OUTER[(i + 1) % 5][1]);
+}).join("");
+
 const props = withDefaults(
     defineProps<{
         copyright?: string;
@@ -228,13 +241,12 @@ const props = withDefaults(
     },
 );
 
-/* --------------------------------------------------------------- state --- */
 const uid = useId().replace(/[^a-zA-Z0-9]/g, "");
 const rootRef = ref<HTMLElement | null>(null);
 const svgRef = ref<SVGSVGElement | null>(null);
 const sheetRef = ref<SVGPathElement | null>(null);
 const rimRef = ref<SVGPathElement | null>(null);
-const pinRef = ref<HTMLElement | null>(null);
+const ballRef = ref<HTMLElement | null>(null);
 const flapEls: (SVGPathElement | null)[] = [];
 const gradEls: (SVGLinearGradientElement | null)[] = [];
 const timers: number[] = [];
@@ -243,7 +255,7 @@ const still = ref(false);
 const stage = ref(0);
 const hit = ref(false);
 const visible = ref(false);
-const pin = ref<"idle" | "lift" | "stab">("idle");
+const ball = ref<"idle" | "kick" | "land">("idle");
 const grain = ref("");
 
 const s: TearState = {
@@ -268,7 +280,6 @@ const later = (fn: () => void, ms: number): void => {
     timers.push(window.setTimeout(fn, ms));
 };
 
-/* ------------------------------------------------------------- drawing --- */
 function frame(now: number): void {
     s.raf = 0;
     const { W, H, tear } = s;
@@ -335,47 +346,27 @@ function kick() {
     if (!s.raf && typeof requestAnimationFrame !== "undefined") s.raf = requestAnimationFrame(frame);
 }
 
-/* ------------------------------------------------------------ lifecycle --- */
 let ro: ResizeObserver | null = null;
 let io: IntersectionObserver | null = null;
 let mq: MediaQueryList | null = null;
 let onMq: (() => void) | null = null;
 
-onMounted(() => {
-    // reduced motion
-    if (typeof matchMedia !== "undefined") {
-        const query = matchMedia("(prefers-reduced-motion: reduce)");
-        mq = query;
-        onMq = () => (still.value = query.matches);
-        onMq();
-        query.addEventListener("change", onMq);
-    }
+const near = ref(false);
+let nearObserver: IntersectionObserver | null = null;
 
-    // size
+function sizeStage(): void {
     const el = rootRef.value;
-    if (!el) return;
-    ro = new ResizeObserver(() => {
-        s.W = el.clientWidth;
-        s.H = el.clientHeight;
-        const svg = svgRef.value;
-        if (svg) {
-            svg.setAttribute("width", String(s.W));
-            svg.setAttribute("height", String(s.H));
-            svg.setAttribute("viewBox", "0 0 " + s.W + " " + s.H);
-        }
-        kick();
-    });
-    ro.observe(el);
+    const svg = svgRef.value;
+    if (!el || !svg) return;
+    s.W = el.clientWidth;
+    s.H = el.clientHeight;
+    svg.setAttribute("width", String(s.W));
+    svg.setAttribute("height", String(s.H));
+    svg.setAttribute("viewBox", "0 0 " + s.W + " " + s.H);
+    kick();
+}
 
-    // visibility
-    if (typeof IntersectionObserver === "undefined") {
-        visible.value = true;
-    } else {
-        io = new IntersectionObserver(([e]) => (visible.value = e.isIntersecting), { threshold: 0.22 });
-        io.observe(el);
-    }
-
-    // grain tile
+function makeGrain(): void {
     const c = document.createElement("canvas");
     c.width = c.height = 160;
     const g = c.getContext("2d");
@@ -390,10 +381,53 @@ onMounted(() => {
         g.putImageData(img, 0, 0);
         grain.value = c.toDataURL();
     }
+}
+
+function drawStage(): void {
+    near.value = true;
+    makeGrain();
+    nextTick(sizeStage);
+}
+
+onMounted(() => {
+    if (typeof matchMedia !== "undefined") {
+        const query = matchMedia("(prefers-reduced-motion: reduce)");
+        mq = query;
+        onMq = () => (still.value = query.matches);
+        onMq();
+        query.addEventListener("change", onMq);
+    }
+
+    const el = rootRef.value;
+    if (!el) return;
+    ro = new ResizeObserver(sizeStage);
+    ro.observe(el);
+
+    if (typeof IntersectionObserver === "undefined") {
+        visible.value = true;
+    } else {
+        io = new IntersectionObserver(([e]) => (visible.value = e.isIntersecting), { threshold: 0.22 });
+        io.observe(el);
+    }
+
+    if (typeof IntersectionObserver === "undefined") {
+        drawStage();
+    } else {
+        nearObserver = new IntersectionObserver(
+            ([entry]) => {
+                if (!entry.isIntersecting) return;
+                nearObserver?.disconnect();
+                drawStage();
+            },
+            { rootMargin: "300px" },
+        );
+        nearObserver.observe(el);
+    }
 });
 
 onBeforeUnmount(() => {
     ro?.disconnect();
+    nearObserver?.disconnect();
     io?.disconnect();
     if (mq && onMq) mq.removeEventListener("change", onMq);
     cancelAnimationFrame(s.raf);
@@ -401,7 +435,6 @@ onBeforeUnmount(() => {
     timers.forEach((id) => clearTimeout(id));
 });
 
-// the opening: chrome, pin, rip
 watch(visible, (isVisible) => {
     if (!isVisible || stage.value > 0) return;
     if (still.value) {
@@ -423,7 +456,6 @@ watch(visible, (isVisible) => {
     later(() => (hit.value = false), 1480);
 });
 
-// a new seed from outside re-tears in place
 watch(
     () => props.seed,
     (seed) => {
@@ -441,7 +473,6 @@ watch(
     },
 );
 
-/* ------------------------------------------------------------- actions --- */
 function onPointerMove(e: PointerEvent): void {
     const el = rootRef.value;
     if (!el || still.value) return;
@@ -449,17 +480,17 @@ function onPointerMove(e: PointerEvent): void {
     s.px = e.clientX - r.left;
     s.py = e.clientY - r.top;
     const tilt = Math.max(-9, Math.min(9, (s.px / r.width - 0.5) * 18));
-    pinRef.value?.style.setProperty("--tilt", tilt.toFixed(2) + "deg");
+    ballRef.value?.style.setProperty("--tilt", tilt.toFixed(2) + "deg");
     kick();
 }
 
 function onPointerLeave() {
     s.px = s.py = -1e4;
-    pinRef.value?.style.setProperty("--tilt", "0deg");
+    ballRef.value?.style.setProperty("--tilt", "0deg");
     kick();
 }
 
-function repin() {
+function kickBall() {
     if (s.busy || stage.value < 3) return;
     const next = s.seed + 1;
     const swap = () => {
@@ -476,7 +507,7 @@ function repin() {
         return;
     }
     s.busy = true;
-    pin.value = "lift";
+    ball.value = "kick";
     later(() => {
         swap();
         s.mode = "morph";
@@ -484,33 +515,24 @@ function repin() {
         s.dur = 1150;
         kick();
     }, 300);
-    later(() => (pin.value = "stab"), 1280);
+    later(() => (ball.value = "land"), 900);
     later(() => {
-        pin.value = "idle";
+        ball.value = "idle";
         s.busy = false;
-    }, 1720);
+    }, 1650);
 }
 
 function toTop() {
     window.scrollTo({ top: 0, behavior: still.value ? "auto" : "smooth" });
 }
 
-/* ------------------------------------------------------------- colours --- */
 const HEX = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
-const pinBase = computed(() => (HEX.test(props.sheet) ? props.sheet : "#DC2626"));
 const { isDark } = useTheme();
 const paperColor = computed(() => (isDark.value ? "#171717" : props.paper));
 const paperInkColor = computed(() => (isDark.value ? "#38bdf8" : props.paperInk));
 const flapBase = computed(() =>
     mixHex(HEX.test(paperColor.value) ? paperColor.value : "#f3f3f1", "#ffffff", isDark.value ? 0.1 : 0.35),
 );
-
-const pinColors = computed(() => ({
-    hi: mixHex(pinBase.value, "#ffffff", 0.62),
-    mid: pinBase.value,
-    lo: mixHex(pinBase.value, "#000000", 0.42),
-    deep: mixHex(pinBase.value, "#000000", 0.66),
-}));
 
 const flapStops = computed(() => [
     mixHex(flapBase.value, "#1c2a44", 0.34),
@@ -579,7 +601,7 @@ const cols = computed((): FooterColumn[] => {
         @pointermove="onPointerMove"
         @pointerleave="onPointerLeave"
     >
-        <svg ref="svgRef" class="tpf-stage" aria-hidden="true">
+        <svg v-if="near" ref="svgRef" class="tpf-stage" aria-hidden="true">
             <defs>
                 <radialGradient :id="uid + 'v'" cx=".5" cy=".78" r=".75">
                     <stop offset=".45" stop-color="#fff" stop-opacity="0" />
@@ -632,7 +654,6 @@ const cols = computed((): FooterColumn[] => {
         </svg>
 
         <div class="tpf-inner">
-        <!-- on the sheet -->
         <button type="button" class="tpf-z tpf-ib tpf-up" :aria-label="t('footer.top')" :title="t('footer.top')" @click="toTop">
             <Icon name="chevL" />
         </button>
@@ -649,68 +670,38 @@ const cols = computed((): FooterColumn[] => {
             </ul>
         </nav>
 
-        <!-- the pin -->
         <button
-            ref="pinRef"
+            ref="ballRef"
             type="button"
-            class="tpf-pin"
-            :data-pin="pin"
-            :aria-label="t('footer.repin')"
-            :title="t('footer.pin')"
-            @click="repin"
+            class="tpf-ball"
+            :data-ball="ball"
+            :aria-label="t('footer.kick')"
+            :title="t('footer.kick_title')"
+            @click="kickBall"
         >
             <span class="tpf-shadow" aria-hidden="true" />
-            <span class="tpf-tilt">
-                <span class="tpf-drop">
-                    <span class="tpf-body">
-                        <svg viewBox="0 0 100 200" class="tpf-pin-svg" aria-hidden="true">
-                            <defs>
-                                <linearGradient :id="uid + 'ps'" x1="0" x2="1" y1="0" y2="0">
-                                    <stop offset="0" class="tpf-stop" :style="{ stopColor: pinColors.lo }" />
-                                    <stop offset=".24" class="tpf-stop" :style="{ stopColor: pinColors.mid }" />
-                                    <stop offset=".4" class="tpf-stop" :style="{ stopColor: pinColors.hi }" />
-                                    <stop offset=".58" class="tpf-stop" :style="{ stopColor: pinColors.mid }" />
-                                    <stop offset="1" class="tpf-stop" :style="{ stopColor: pinColors.deep }" />
-                                </linearGradient>
-                                <radialGradient :id="uid + 'pt'" cx=".38" cy=".3" r=".8">
-                                    <stop offset="0" class="tpf-stop" :style="{ stopColor: pinColors.hi }" />
-                                    <stop offset=".55" class="tpf-stop" :style="{ stopColor: pinColors.mid }" />
-                                    <stop offset="1" class="tpf-stop" :style="{ stopColor: pinColors.lo }" />
-                                </radialGradient>
-                                <linearGradient :id="uid + 'pn'" x1="0" x2="1" y1="0" y2="0">
-                                    <stop offset="0" stop-color="#5b616b" />
-                                    <stop offset=".4" stop-color="#f4f5f7" />
-                                    <stop offset=".7" stop-color="#a3a9b2" />
-                                    <stop offset="1" stop-color="#4a4f57" />
-                                </linearGradient>
-                                <filter :id="uid + 'pb'" x="-50%" y="-50%" width="200%" height="200%">
-                                    <feGaussianBlur stdDeviation="1.4" />
-                                </filter>
-                            </defs>
-                            <path d="M48.3 112h3.4l-.7 76-1 4-1-4z" :fill="'url(#' + uid + 'pn)'" />
-                            <ellipse cx="50" cy="191.5" rx="3.2" ry="1.1" fill="#2a0808" opacity=".35" />
-                            <path d="M28 103v6.5a22 7 0 0 0 44 0V103z" :fill="'url(#' + uid + 'ps)'" />
-                            <ellipse cx="50" cy="103" rx="22" ry="7" :fill="'url(#' + uid + 'pt)'" />
-                            <path
-                                d="M41.5 38c1.6 16 4.6 26 3 36-1.8 10-13 19-14.6 29h40.2c-1.6-10-12.8-19-14.6-29-1.6-10 1.4-20 3-36z"
-                                :fill="'url(#' + uid + 'ps)'"
-                            />
-                            <path d="M16 22v14a34 13 0 0 0 68 0V22z" :fill="'url(#' + uid + 'ps)'" />
-                            <ellipse cx="50" cy="22" rx="34" ry="13" :fill="'url(#' + uid + 'pt)'" />
-                            <ellipse cx="50" cy="22" rx="33" ry="12.3" fill="none" stroke="#fff" stroke-opacity=".28" stroke-width=".8" />
-                            <ellipse cx="37" cy="17.5" rx="12" ry="4" fill="#fff" opacity=".7" :filter="'url(#' + uid + 'pb)'" />
-                            <path
-                                d="M22 38c4 4.5 9.5 6.4 15 7"
-                                stroke="#fff"
-                                stroke-opacity=".35"
-                                stroke-width="2"
-                                fill="none"
-                                stroke-linecap="round"
-                                :filter="'url(#' + uid + 'pb)'"
-                            />
-                            <path d="M45 50c.8 8 1.6 14 .8 22" stroke="#fff" stroke-opacity=".45" stroke-width="1.6" fill="none" stroke-linecap="round" />
-                        </svg>
+            <span class="tpf-drop">
+                <span class="tpf-body">
+                    <span class="tpf-turn">
+                    <svg viewBox="0 0 100 100" class="tpf-ball-svg tpf-roll" aria-hidden="true">
+                        <clipPath :id="uid + 'bc'">
+                            <circle cx="50" cy="50" r="48" />
+                        </clipPath>
+                        <circle cx="50" cy="50" r="48" fill="#fff" />
+                        <g :clip-path="'url(#' + uid + 'bc)'">
+                            <path :d="BALL_SEAMS" fill="none" stroke="#6b6b6b" stroke-width="1.4" />
+                            <path :d="BALL_PANELS" fill="#171717" stroke="#171717" stroke-width="1.5" stroke-linejoin="round" />
+                        </g>
+                    </svg>
                     </span>
+                    <svg viewBox="0 0 100 100" class="tpf-ball-svg" aria-hidden="true">
+                        <radialGradient :id="uid + 'bl'" cx=".36" cy=".3" r=".75">
+                            <stop offset="0" stop-color="#fff" stop-opacity=".35" />
+                            <stop offset=".55" stop-color="#000" stop-opacity="0" />
+                            <stop offset="1" stop-color="#000" stop-opacity=".42" />
+                        </radialGradient>
+                        <circle cx="50" cy="50" r="48" :fill="'url(#' + uid + 'bl)'" />
+                    </svg>
                 </span>
             </span>
         </button>
@@ -734,7 +725,6 @@ const cols = computed((): FooterColumn[] => {
 .tpf.is-hit .tpf-sheet-g{animation:tpf-hit .32s cubic-bezier(.3,.7,.4,1)}
 .tpf-sheet{fill:var(--tpf-sheet)}.tpf-paper{fill:var(--tpf-paper)}.tpf-rim{fill:var(--tpf-rim)}
 .tpf-ico{width:1.35em;height:1.35em;display:block;max-width:none;flex:none}
-.tpf-stop{transition:stop-color .7s ease}
 .tpf-z{position:absolute;z-index:2}
 .tpf-ink{color:var(--tpf-on-paper)}
 .tpf-ib{display:grid;place-items:center;width:44px;height:44px;border-radius:50%;transition:background-color .2s}
@@ -748,29 +738,34 @@ const cols = computed((): FooterColumn[] => {
 .tpf-col ul{list-style:none;margin:0;padding:0;display:grid;gap:0;justify-items:inherit}
 .tpf-col li a{display:inline-flex;align-items:center;min-height:44px;text-underline-offset:.25em}
 .tpf-col li a:hover{text-decoration:underline}
-.tpf-pin{position:absolute;z-index:3;left:50%;top:68%;width:max(46px,calc(9*var(--u)));height:max(92px,calc(18*var(--u)));transform:translate(-50%,-100%);cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
-.tpf-pin:focus-visible{outline-offset:6px}
-.tpf-tilt{position:absolute;inset:0;transform-origin:50% 100%;transform:rotate(calc(5deg + var(--tilt,0deg)));transition:transform .7s var(--ease)}
-.tpf-drop,.tpf-body{position:absolute;inset:0;transform-origin:50% 100%}
+.tpf-ball{--size:max(64px,calc(13*var(--u)));position:absolute;z-index:3;left:50%;top:66%;width:var(--size);height:var(--size);border-radius:50%;transform:translate(-50%,-100%);cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.tpf .tpf-ball:focus-visible{outline-offset:6px;border-radius:50%}
+.tpf-drop,.tpf-body,.tpf-turn,.tpf-ball-svg{position:absolute;inset:0}
+.tpf-drop,.tpf-body{transform-origin:50% 100%}
 .tpf-body{transition:transform .32s var(--ease)}
-.tpf-pin-svg{position:absolute;inset:0;width:100%;height:100%;max-width:none;display:block;overflow:visible}
-.tpf-shadow{position:absolute;right:50%;bottom:-.5%;width:150%;height:24%;transform-origin:100% 50%;transform:rotate(16deg);transition:transform .45s var(--ease),opacity .45s}
-.tpf-shadow::before,.tpf-shadow::after{content:'';position:absolute;top:50%;border-radius:50%;transform:translateY(-50%)}
-.tpf-shadow::before{right:0;width:100%;height:24%;background:linear-gradient(90deg,transparent,rgba(42,8,8,.26) 60%,rgba(42,8,8,.42));filter:blur(2px)}
-.tpf-shadow::after{left:-6%;width:60%;height:100%;background:radial-gradient(closest-side,rgba(42,8,8,.22),transparent);filter:blur(3px)}
-.tpf:not(.s2) .tpf-pin{opacity:0;pointer-events:none}
-.tpf.s2 .tpf-drop{animation:tpf-drop .62s cubic-bezier(.5,0,.75,0) both}
-.tpf.s2 .tpf-shadow{animation:tpf-shade .62s cubic-bezier(.5,0,.75,0) both}
-.tpf-pin:hover .tpf-body{transform:translateY(-3%)}
-.tpf-pin:hover .tpf-shadow{transform:rotate(16deg) translateX(-5%) scaleX(1.06)}
-.tpf-pin[data-pin=lift] .tpf-body{transform:translateY(-22%) rotate(-10deg);transition-duration:.3s}
-.tpf-pin[data-pin=lift] .tpf-shadow{transform:rotate(16deg) translateX(-26%) scale(1.25);opacity:.55}
-.tpf-pin[data-pin=stab] .tpf-body{animation:tpf-stab .42s cubic-bezier(.55,0,.8,.2) both}
+.tpf-ball-svg{width:100%;height:100%;max-width:none;display:block}
+.tpf-roll{transform:rotate(calc(var(--tilt,0deg) * 5));transition:transform .7s var(--ease)}
+.tpf-shadow{position:absolute;left:8%;right:8%;bottom:-9%;height:18%;border-radius:50%;background:radial-gradient(closest-side,rgba(42,8,8,.5),transparent);transition:transform .45s var(--ease),opacity .45s}
+.tpf:not(.s2) .tpf-ball{opacity:0;pointer-events:none}
+.tpf.s2 .tpf-drop{animation:tpf-drop 1.15s linear both}
+.tpf.s2 .tpf-shadow{animation:tpf-shade 1.15s linear both}
+.tpf-ball:hover .tpf-body{transform:translateY(-8%)}
+.tpf-ball:hover .tpf-shadow{transform:scale(.86);opacity:.8}
+.tpf-ball[data-ball=kick] .tpf-body{animation:tpf-kick .9s cubic-bezier(.2,.7,.4,1) both}
+.tpf-ball[data-ball=kick] .tpf-shadow{transform:scale(.45);opacity:.4}
+.tpf-ball[data-ball=land] .tpf-body{animation:tpf-land .75s linear both}
+.tpf.s2 .tpf-turn{animation:tpf-turn 1.15s cubic-bezier(.3,.4,.4,1) both}
+.tpf-ball[data-ball=kick] .tpf-roll{animation:tpf-spin-up .9s cubic-bezier(.2,.7,.4,1) both}
+.tpf-ball[data-ball=land] .tpf-roll{animation:tpf-spin-down .75s cubic-bezier(.3,.4,.4,1) both}
+@keyframes tpf-turn{from{rotate:-360deg}to{rotate:0deg}}
+@keyframes tpf-spin-up{from{rotate:0deg}to{rotate:540deg}}
+@keyframes tpf-spin-down{from{rotate:540deg}to{rotate:720deg}}
 .tpf-foot span{background:var(--tpf-paper);border-radius:99px;padding:.1em .9em}
 .tpf-foot{left:0;right:0;bottom:4%;display:flex;justify-content:center;font-size:var(--fs)}
 @keyframes tpf-hit{0%{transform:translateY(0)}30%{transform:translateY(2px)}60%{transform:translateY(-.5px)}100%{transform:translateY(0)}}
-@keyframes tpf-drop{0%{transform:translateY(-62cqh) rotate(-28deg) scale(1.5);opacity:0}25%{opacity:1}80%{transform:translateY(0) rotate(3deg) scale(1)}90%{transform:scale(1.04,.95)}100%{transform:none;opacity:1}}
-@keyframes tpf-shade{0%{transform:rotate(16deg) translateX(-60%) scale(2.4);opacity:0}80%{transform:rotate(16deg);opacity:1}100%{transform:rotate(16deg);opacity:1}}
-@keyframes tpf-stab{0%{transform:translateY(-22%) rotate(-10deg)}70%{transform:translateY(1.5%) rotate(1deg)}100%{transform:none}}
+@keyframes tpf-drop{0%{transform:translateY(-62cqh);opacity:0;animation-timing-function:cubic-bezier(.5,0,.9,.5)}12%{opacity:1}44%{transform:translateY(0) scale(1.14,.84);animation-timing-function:cubic-bezier(.2,.6,.4,1)}62%{transform:translateY(-52%);animation-timing-function:cubic-bezier(.6,0,.8,.4)}78%{transform:translateY(0) scale(1.07,.92);animation-timing-function:cubic-bezier(.2,.6,.4,1)}89%{transform:translateY(-14%);animation-timing-function:cubic-bezier(.6,0,.8,.4)}100%{transform:none;opacity:1}}
+@keyframes tpf-shade{0%{transform:scale(.2);opacity:0}44%{transform:scale(1.15);opacity:1}62%{transform:scale(.7);opacity:.6}78%{transform:scale(1.06);opacity:1}89%{transform:scale(.9)}100%{transform:none;opacity:1}}
+@keyframes tpf-kick{0%{transform:translateY(0) scale(1.12,.86)}100%{transform:translateY(-150%)}}
+@keyframes tpf-land{0%{transform:translateY(-150%);animation-timing-function:cubic-bezier(.5,0,.9,.5)}52%{transform:translateY(0) scale(1.13,.85);animation-timing-function:cubic-bezier(.2,.6,.4,1)}76%{transform:translateY(-26%);animation-timing-function:cubic-bezier(.6,0,.8,.4)}100%{transform:none}}
 @media (prefers-reduced-motion: reduce){.tpf *,.tpf *::before,.tpf *::after{animation:none!important;transition-duration:.01s!important;transition-delay:0s!important}}
 </style>

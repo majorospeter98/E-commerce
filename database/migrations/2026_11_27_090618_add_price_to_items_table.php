@@ -13,7 +13,6 @@ return new class extends Migration
             $table->unsignedInteger('price')->default(0);
         });
 
-        /** Prices are in whole forints. ItemSeeder never updates existing rows, so fill them here. */
         DB::table('items')->where('image', 'short.webp')->update(['price' => 12990]);
         DB::table('items')->where('image', '!=', 'short.webp')->update(['price' => 29990]);
     }

@@ -6,6 +6,8 @@
                     <img
                         class="kit-img"
                         :src="`/Teams/450/${kit.team}/${kit.image}`"
+                        :srcset="tileSources(kit)"
+                        sizes="(min-width: 1445px) 416px, (min-width: 768px) 29vw, 44vw"
                         alt=""
                         width="450"
                         height="450"
@@ -13,12 +15,12 @@
                         :loading="index < 4 ? 'eager' : 'lazy'"
                     />
                 </span>
-                <span class="kit-caption">
-                    <span class="kit-team">{{ kit.team }}</span>
+                <div class="kit-caption">
+                    <component :is="headingLevel" class="kit-team">{{ kit.team }}</component>
                     <span class="kit-meta">{{ garment(kit.image) }} · {{ kitType(kit.type) }} · {{ kit.brand }}</span>
                     <span v-if="kit.price !== undefined" class="kit-price">{{ formatPrice(kit.price) }}</span>
                     <span v-for="line in kit.details" :key="line" class="kit-meta">{{ line }}</span>
-                </span>
+                </div>
             </Link>
             <button
                 v-if="removeLabel"
@@ -40,13 +42,19 @@ import { Link } from "@inertiajs/vue3";
 import type { Kit } from "@/types";
 import { useTranslation } from "@/useTranslation";
 
-defineProps<{
+withDefaults(
+    defineProps<{
     kits: Kit[];
-    /** When set, each card shows a remove button labelled by this function. */
+    headingLevel?: "h2" | "h3";
     removeLabel?: (kit: Kit) => string;
-}>();
+    }>(),
+    { headingLevel: "h2", removeLabel: undefined },
+);
 const emit = defineEmits<{ remove: [kit: Kit] }>();
-const { t, kitType, garment, formatPrice } = useTranslation();
+const { kitType, garment, formatPrice } = useTranslation();
+
+const tileSources = (kit: Kit): string =>
+    [360, 450].map((width) => `${encodeURI(`/Teams/${width}/${kit.team}/${kit.image}`)} ${width}w`).join(", ");
 </script>
 
 <style scoped>
@@ -115,7 +123,6 @@ const { t, kitType, garment, formatPrice } = useTranslation();
 .kit-link:focus-visible .kit-stage {
     border-color: color-mix(in srgb, var(--page-ink) 40%, transparent);
 }
-/* a deliberate rounded plate instead of a hard white rectangle */
 :global(html.dark .kit-stage) {
     background: #fff;
 }
@@ -131,8 +138,8 @@ const { t, kitType, garment, formatPrice } = useTranslation();
     padding-inline: 0.25rem;
     line-height: 1.35;
 }
-/* hover and focus underline the name and darken the tile edge: the photo stays still */
 .kit-team {
+    letter-spacing: normal;
     font-weight: 800;
     font-size: 1.266rem;
     text-decoration: underline 2px transparent;
